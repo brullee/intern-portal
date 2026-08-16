@@ -1,0 +1,24 @@
+{
+  // Visit https://aka.ms/tsconfig to read more about this file
+  "compilerOptions": {
+    // File Layout
+    "rootDir": ".",
+    "outDir": "dist",
+
+    // Environment Settings — plain CommonJS to match this project's package.json
+    // "type": "commonjs" (matches the FSO Part 3-5 backend convention).
+    "module": "commonjs",
+    "target": "es2022",
+    "types": ["node"],
+    "esModuleInterop": true,
+
+    // Other Outputs
+    "sourceMap": true,
+
+    // Recommended Options
+    "strict": true,
+    "skipLibCheck": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["node_modules", "dist"]
+}

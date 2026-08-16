@@ -1,0 +1,26 @@
+{
+  "name": "intern-portal",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev --prefix server\" \"npm run dev --prefix client\"",
+    "lint": "npm run lint --prefix server && npm run lint --prefix client",
+    "format": "npm run format --prefix server && npm run format --prefix client",
+    "format:check": "npm run format:check --prefix server && npm run format:check --prefix client",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Faisalratrout/InternsPortal.git"
+  },
+  "keywords": [],
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Faisalratrout/InternsPortal/issues"
+  },
+  "homepage": "https://github.com/Faisalratrout/InternsPortal#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

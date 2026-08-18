@@ -14,10 +14,7 @@ export async function up(knex: Knex): Promise<void> {
     table.date('start_date')
     table.date('end_date')
     table.integer('created_by').references('id').inTable('users')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('intern_id', 'idx_plans_intern_id')
   })
 }

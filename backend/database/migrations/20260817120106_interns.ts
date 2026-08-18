@@ -25,10 +25,7 @@ export async function up(knex: Knex): Promise<void> {
       .notNullable()
       .defaultTo('applied')
       .checkIn(['applied', 'active', 'completed', 'terminated', 'on_leave'])
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.check(
       '?? = ? OR (?? IS NULL AND ?? IS NULL)',
       ['intern_type', 'student', 'university_id', 'doctor_id'],

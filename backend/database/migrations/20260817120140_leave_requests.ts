@@ -18,10 +18,7 @@ export async function up(knex: Knex): Promise<void> {
       .defaultTo('pending')
       .checkIn(['pending', 'approved', 'rejected'])
     table.integer('reviewed_by').references('id').inTable('users')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
   })
 }
 

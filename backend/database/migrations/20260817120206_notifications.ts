@@ -12,10 +12,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('type', 50).notNullable()
     table.jsonb('payload')
     table.boolean('is_read').notNullable().defaultTo(false)
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('user_id', 'idx_notifications_user_id')
   })
 }

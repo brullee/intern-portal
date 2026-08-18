@@ -14,10 +14,7 @@ export async function up(knex: Knex): Promise<void> {
       .references('id')
       .inTable('users')
       .onDelete('CASCADE')
-    table
-      .timestamp('read_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('read_at').notNullable().defaultTo(knex.fn.now())
     table.primary(['message_id', 'user_id'])
   })
 }

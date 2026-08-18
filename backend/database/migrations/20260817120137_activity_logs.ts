@@ -13,10 +13,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('entity_type', 50)
     table.integer('entity_id')
     table.jsonb('details')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('intern_id', 'idx_activity_logs_intern_id')
     table.index('created_at', 'idx_activity_logs_created_at')
   })

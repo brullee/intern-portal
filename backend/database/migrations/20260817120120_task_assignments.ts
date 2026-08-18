@@ -14,10 +14,7 @@ export async function up(knex: Knex): Promise<void> {
       .references('user_id')
       .inTable('interns')
       .onDelete('CASCADE')
-    table
-      .timestamp('assigned_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('assigned_at').notNullable().defaultTo(knex.fn.now())
     table.primary(['task_id', 'intern_id'])
     table.index('intern_id', 'idx_task_assignments_intern_id')
   })

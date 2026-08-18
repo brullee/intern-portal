@@ -12,10 +12,7 @@ export async function up(knex: Knex): Promise<void> {
     table.integer('sender_id').notNullable().references('id').inTable('users')
     table.text('body')
     table.string('attachment_url', 255)
-    table
-      .timestamp('sent_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('sent_at').notNullable().defaultTo(knex.fn.now())
     table.index('conversation_id', 'idx_messages_conversation_id')
   })
 }

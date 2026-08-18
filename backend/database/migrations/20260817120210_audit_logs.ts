@@ -8,10 +8,7 @@ export async function up(knex: Knex): Promise<void> {
     table.string('entity_type', 50).notNullable()
     table.integer('entity_id')
     table.jsonb('diff')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('created_at', 'idx_audit_logs_created_at')
   })
 }

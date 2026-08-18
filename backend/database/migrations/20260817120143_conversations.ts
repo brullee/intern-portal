@@ -8,10 +8,7 @@ export async function up(knex: Knex): Promise<void> {
       .notNullable()
       .defaultTo('direct')
       .checkIn(['direct', 'group'])
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
   })
 }
 

@@ -9,14 +9,11 @@ export async function up(knex: Knex): Promise<void> {
       .references('user_id')
       .inTable('interns')
       .onDelete('CASCADE')
-    table.timestamp('clock_in', { useTz: false }).notNullable()
-    table.timestamp('clock_out', { useTz: false })
+    table.timestamp('clock_in').notNullable()
+    table.timestamp('clock_out')
     table.boolean('auto_closed').notNullable().defaultTo(false)
     table.text('notes')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('intern_id', 'idx_attendance_sessions_intern_id')
   })
 }

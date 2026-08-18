@@ -13,14 +13,8 @@ export async function up(knex: Knex): Promise<void> {
       .defaultTo('active')
       .checkIn(['active', 'on_hold', 'completed', 'cancelled'])
     table.integer('created_by').references('id').inTable('users')
-    table
-      .timestamp('created_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
-    table
-      .timestamp('updated_at', { useTz: false })
-      .notNullable()
-      .defaultTo(knex.fn.now())
+    table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
+    table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now())
   })
 }
 

@@ -10,6 +10,10 @@ export default tseslint.config(
     rules: {
       eqeqeq: 'error',
       'no-console': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
     },
   },
   // Turns off any stylistic rules above that would fight with Prettier.

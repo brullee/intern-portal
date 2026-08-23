@@ -1,12 +1,7 @@
 import { create } from 'zustand'
-import axios from 'axios'
+import authService, { type User } from '../services/authService'
 
-export interface User {
-  id: number
-  username: string
-  roleId: number
-  roleName: string
-}
+export type { User }
 
 type Status = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'
 
@@ -29,11 +24,8 @@ const useAuthStore = create<AuthState>((set) => ({
   actions: {
     login: async (username, password) => {
       try {
-        const response = await axios.post('/api/auth/login', {
-          username,
-          password,
-        })
-        set({ user: response.data.user, status: 'authenticated' })
+        const user = await authService.login(username, password)
+        set({ user, status: 'authenticated' })
       } catch {
         set({ user: null, status: 'unauthenticated' })
         throw new Error('Invalid username or password')
@@ -41,15 +33,15 @@ const useAuthStore = create<AuthState>((set) => ({
     },
 
     logout: async () => {
-      await axios.post('/api/auth/logout')
+      await authService.logout()
       set({ user: null, status: 'unauthenticated' })
     },
 
     checkSession: async () => {
       set({ status: 'loading' })
       try {
-        const response = await axios.get('/api/auth/me')
-        set({ user: response.data.user, status: 'authenticated' })
+        const user = await authService.getSession()
+        set({ user, status: 'authenticated' })
       } catch {
         set({ user: null, status: 'unauthenticated' })
       }

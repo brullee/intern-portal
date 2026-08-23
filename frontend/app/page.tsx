@@ -1,8 +1,8 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useUser, useAuthActions } from '@/store/authStore'
-import RequireAuth from '@/components/RequireAuth'
+import { useUser, useAuthActions } from '@/app/store/authStore'
+import RequireAuth from '@/app/components/RequireAuth'
 
 export default function Home() {
   const router = useRouter()

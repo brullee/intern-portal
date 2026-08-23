@@ -26,7 +26,11 @@ export async function up(knex: Knex): Promise<void> {
         'approved',
         'rejected',
       ])
-    table.integer('created_by').references('id').inTable('users')
+    table
+      .integer('created_by')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now())
     table.index('project_id', 'idx_tasks_project_id')

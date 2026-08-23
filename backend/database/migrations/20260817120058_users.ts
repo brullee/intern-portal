@@ -11,7 +11,11 @@ export async function up(knex: Knex): Promise<void> {
     table.string('phone', 30)
     table.string('avatar_url', 255)
     table.boolean('is_active').notNullable().defaultTo(true)
-    table.integer('created_by').references('id').inTable('users')
+    table
+      .integer('created_by')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.timestamp('updated_at').notNullable().defaultTo(knex.fn.now())
     table.index('role_id', 'idx_users_role_id')

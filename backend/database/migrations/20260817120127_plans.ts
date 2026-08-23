@@ -13,7 +13,11 @@ export async function up(knex: Knex): Promise<void> {
     table.text('description')
     table.date('start_date')
     table.date('end_date')
-    table.integer('created_by').references('id').inTable('users')
+    table
+      .integer('created_by')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('intern_id', 'idx_plans_intern_id')
   })

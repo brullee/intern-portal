@@ -8,7 +8,11 @@ export async function up(knex: Knex): Promise<void> {
       .references('user_id')
       .inTable('interns')
       .onDelete('CASCADE')
-    table.integer('actor_id').references('id').inTable('users')
+    table
+      .integer('actor_id')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table.string('action_type', 50).notNullable()
     table.string('entity_type', 50)
     table.integer('entity_id')

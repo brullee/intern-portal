@@ -15,7 +15,11 @@ export async function up(knex: Knex): Promise<void> {
       .inTable('permissions')
       .onDelete('CASCADE')
     table.string('effect', 6).notNullable().checkIn(['grant', 'revoke'])
-    table.integer('granted_by').references('id').inTable('users')
+    table
+      .integer('granted_by')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.primary(['user_id', 'permission_id'])
   })

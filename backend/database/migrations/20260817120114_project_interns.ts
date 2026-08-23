@@ -2,10 +2,6 @@ import type { Knex } from 'knex'
 
 export async function up(knex: Knex): Promise<void> {
   return await knex.schema.createTable('project_interns', (table) => {
-    // CREATE TABLE project_interns (
-    //  project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
-    //  intern_id INTEGER NOT NULL REFERENCES interns(user_id) ON DELETE CASCADE,
-    //  assigned_at TIMESTAMP NOT NULL DEFAULT now
     table
       .integer('project_id')
       .notNullable()

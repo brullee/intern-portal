@@ -17,7 +17,11 @@ export async function up(knex: Knex): Promise<void> {
     table.text('note')
     table.string('file_url', 255)
     table.timestamp('submitted_at').notNullable().defaultTo(knex.fn.now())
-    table.integer('reviewed_by').references('id').inTable('users')
+    table
+      .integer('reviewed_by')
+      .references('id')
+      .inTable('users')
+      .onDelete('SET NULL')
     table
       .string('review_status', 20)
       .defaultTo('pending')

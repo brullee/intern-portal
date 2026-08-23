@@ -11,6 +11,8 @@ import taskRoutes from './routes/taskRoutes'
 import projectInternRoutes from './routes/projectInternRoutes'
 import taskAssignmentRoutes from './routes/taskAssignmentRoutes'
 import taskSubmissionRoutes from './routes/taskSubmissionRoutes'
+import planRoutes from './routes/planRoutes'
+import planMilestoneRoutes from './routes/planMilestoneRoutes'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
@@ -33,6 +35,8 @@ app.use('/api/tasks', taskRoutes)
 app.use('/api/project-interns', projectInternRoutes)
 app.use('/api/task-assignments', taskAssignmentRoutes)
 app.use('/api/task-submissions', taskSubmissionRoutes)
+app.use('/api/plans', planRoutes)
+app.use('/api/plan-milestones', planMilestoneRoutes)
 
 app.use(errorHandler)
 

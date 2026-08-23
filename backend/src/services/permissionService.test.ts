@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test'
 import assert from 'node:assert'
 import supertest from 'supertest'
 import app from '../app'
-import knex from '../db'
+import knex from '../../db'
 
 const api = supertest.agent(app)
 

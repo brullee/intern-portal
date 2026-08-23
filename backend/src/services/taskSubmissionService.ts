@@ -1,6 +1,7 @@
 import taskSubmissionsModel, {
   type TaskSubmission,
 } from '../models/taskSubmissions'
+import activityLogsModel from '../models/activityLogs'
 
 export class ValidationError extends Error {}
 export class InvalidReviewStateError extends Error {}
@@ -54,11 +55,21 @@ async function reviewSubmission(
     throw new InvalidReviewStateError('submission has already been reviewed')
   }
 
-  return taskSubmissionsModel.review(id, {
+  const updated = await taskSubmissionsModel.review(id, {
     review_status: status,
     review_comment: comment?.trim(),
     reviewed_by: reviewedBy,
   })
+
+  await activityLogsModel.create({
+    intern_id: submission.intern_id,
+    actor_id: reviewedBy,
+    action_type: `task_submission_${status}`,
+    entity_type: 'task_submissions',
+    entity_id: id,
+  })
+
+  return updated
 }
 
 export default {

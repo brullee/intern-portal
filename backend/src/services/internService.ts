@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt'
-import knex from '../db'
+import knex from '../../db'
 import internsModel, {
   type InternWithUser,
   type NewIntern,

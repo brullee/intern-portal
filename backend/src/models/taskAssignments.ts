@@ -1,4 +1,4 @@
-import knex from '../db'
+import knex from '../../db'
 
 export class DuplicateAssignmentError extends Error {}
 export class InvalidReferenceError extends Error {}

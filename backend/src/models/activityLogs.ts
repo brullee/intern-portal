@@ -1,0 +1,18 @@
+import knex from '../../db'
+
+export interface NewActivityLog {
+  intern_id: number
+  actor_id?: number
+  action_type: string
+  entity_type?: string
+  entity_id?: number
+  details?: Record<string, unknown>
+}
+
+function create(data: NewActivityLog): Promise<void> {
+  return knex('activity_logs')
+    .insert(data)
+    .then(() => undefined)
+}
+
+export default { create }

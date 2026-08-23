@@ -16,9 +16,14 @@ async function logout(): Promise<void> {
   await axios.post('/api/auth/logout')
 }
 
-async function getSession(): Promise<User> {
+export interface Session {
+  user: User
+  permissions: string[]
+}
+
+async function getSession(): Promise<Session> {
   const response = await axios.get('/api/auth/me')
-  return response.data.user
+  return { user: response.data.user, permissions: response.data.permissions }
 }
 
 const authService = { login, logout, getSession }

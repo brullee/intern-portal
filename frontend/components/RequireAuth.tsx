@@ -2,12 +2,12 @@
 
 import { useEffect, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
+import { useAuthStatus, useAuthActions } from '@/store/authStore'
 
 export default function RequireAuth({ children }: { children: ReactNode }) {
   const router = useRouter()
-  const status = useAuthStore((state) => state.status)
-  const checkSession = useAuthStore((state) => state.checkSession)
+  const status = useAuthStatus()
+  const { checkSession } = useAuthActions()
 
   useEffect(() => {
     if (status === 'idle') {

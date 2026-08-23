@@ -1,13 +1,13 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useAuthStore } from '@/store/authStore'
+import { useUser, useAuthActions } from '@/store/authStore'
 import RequireAuth from '@/components/RequireAuth'
 
 export default function Home() {
   const router = useRouter()
-  const user = useAuthStore((state) => state.user)
-  const logout = useAuthStore((state) => state.logout)
+  const user = useUser()
+  const { logout } = useAuthActions()
 
   async function handleLogout() {
     await logout()

@@ -25,12 +25,34 @@ export interface NewUser {
   created_by?: number
 }
 
+export interface UserWithRole extends User {
+  role_name: string
+}
+
 function findByUsername(username: string): Promise<User | undefined> {
   return knex<User>('users').where({ username }).first()
 }
 
+function findByUsernameWithRole(
+  username: string
+): Promise<UserWithRole | undefined> {
+  return knex<User>('users')
+    .join('roles', 'roles.id', 'users.role_id')
+    .where({ username })
+    .select('users.*', 'roles.name as role_name')
+    .first()
+}
+
 function findById(id: number): Promise<User | undefined> {
   return knex<User>('users').where({ id }).first()
+}
+
+function findByIdWithRole(id: number): Promise<UserWithRole | undefined> {
+  return knex<User>('users')
+    .join('roles', 'roles.id', 'users.role_id')
+    .where({ 'users.id': id })
+    .select('users.*', 'roles.name as role_name')
+    .first()
 }
 
 async function createUser(data: NewUser): Promise<User> {
@@ -55,7 +77,9 @@ function updatePasswordHash(
 
 export default {
   findByUsername,
+  findByUsernameWithRole,
   findById,
+  findByIdWithRole,
   createUser,
   updateUsername,
   updatePasswordHash,

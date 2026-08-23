@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import axios from 'axios'
 
 export interface User {
   id: number
@@ -27,37 +28,31 @@ const useAuthStore = create<AuthState>((set) => ({
 
   actions: {
     login: async (username, password) => {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      })
-
-      if (!res.ok) {
+      try {
+        const response = await axios.post('/api/auth/login', {
+          username,
+          password,
+        })
+        set({ user: response.data.user, status: 'authenticated' })
+      } catch {
         set({ user: null, status: 'unauthenticated' })
         throw new Error('Invalid username or password')
       }
-
-      const data = await res.json()
-      set({ user: data.user, status: 'authenticated' })
     },
 
     logout: async () => {
-      await fetch('/api/auth/logout', { method: 'POST' })
+      await axios.post('/api/auth/logout')
       set({ user: null, status: 'unauthenticated' })
     },
 
     checkSession: async () => {
       set({ status: 'loading' })
-      const res = await fetch('/api/auth/me')
-
-      if (!res.ok) {
+      try {
+        const response = await axios.get('/api/auth/me')
+        set({ user: response.data.user, status: 'authenticated' })
+      } catch {
         set({ user: null, status: 'unauthenticated' })
-        return
       }
-
-      const data = await res.json()
-      set({ user: data.user, status: 'authenticated' })
     },
   },
 }))

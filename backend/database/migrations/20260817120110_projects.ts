@@ -8,10 +8,9 @@ export async function up(knex: Knex): Promise<void> {
     table.date('start_date')
     table.date('end_date')
     table
-      .string('status', 20)
+      .enum('status', ['active', 'on_hold', 'completed', 'cancelled'])
       .notNullable()
       .defaultTo('active')
-      .checkIn(['active', 'on_hold', 'completed', 'cancelled'])
     table
       .integer('created_by')
       .references('id')

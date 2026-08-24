@@ -16,6 +16,8 @@ export async function up(knex: Knex): Promise<void> {
       .onDelete('CASCADE')
     table.timestamp('joined_at').notNullable().defaultTo(knex.fn.now())
     table.primary(['conversation_id', 'user_id'])
+    table.boolean('is_admin').notNullable().defaultTo(false)
+    table.timestamp('hidden_at')
     table.index('user_id', 'idx_conversation_participants_uid')
   })
 }

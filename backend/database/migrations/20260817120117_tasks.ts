@@ -10,22 +10,18 @@ export async function up(knex: Knex): Promise<void> {
       .onDelete('CASCADE')
     table.string('title', 200).notNullable()
     table.text('description')
-    table
-      .string('priority', 10)
-      .defaultTo('medium')
-      .checkIn(['low', 'medium', 'high'])
+    table.enum('priority', ['low', 'medium', 'high']).defaultTo('medium')
     table.date('due_date')
     table
-      .string('status', 20)
-      .notNullable()
-      .defaultTo('not_started')
-      .checkIn([
+      .enum('status', [
         'not_started',
         'in_progress',
         'submitted',
         'approved',
         'rejected',
       ])
+      .notNullable()
+      .defaultTo('not_started')
     table
       .integer('created_by')
       .references('id')

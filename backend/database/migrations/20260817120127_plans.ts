@@ -18,6 +18,8 @@ export async function up(knex: Knex): Promise<void> {
       .references('id')
       .inTable('users')
       .onDelete('SET NULL')
+    table.string('document_url', 255)
+    table.string('document_name', 255)
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.index('intern_id', 'idx_plans_intern_id')
   })

@@ -13,6 +13,7 @@ export async function up(knex: Knex): Promise<void> {
     table.text('body')
     table.string('attachment_url', 255)
     table.timestamp('sent_at').notNullable().defaultTo(knex.fn.now())
+    table.timestamp('deleted_at')
     table.index('conversation_id', 'idx_messages_conversation_id')
   })
 }

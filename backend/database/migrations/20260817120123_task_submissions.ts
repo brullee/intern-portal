@@ -23,9 +23,8 @@ export async function up(knex: Knex): Promise<void> {
       .inTable('users')
       .onDelete('SET NULL')
     table
-      .string('review_status', 20)
+      .enum('review_status', ['pending', 'approved', 'rejected'])
       .defaultTo('pending')
-      .checkIn(['pending', 'approved', 'rejected'])
     table.text('review_comment')
     table.timestamp('reviewed_at')
     table.index('task_id', 'idx_task_submissions_task_id')

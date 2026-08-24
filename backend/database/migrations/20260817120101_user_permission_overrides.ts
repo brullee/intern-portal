@@ -14,7 +14,7 @@ export async function up(knex: Knex): Promise<void> {
       .references('id')
       .inTable('permissions')
       .onDelete('CASCADE')
-    table.string('effect', 6).notNullable().checkIn(['grant', 'revoke'])
+    table.enum('effect', ['grant', 'revoke']).notNullable()
     table
       .integer('granted_by')
       .references('id')

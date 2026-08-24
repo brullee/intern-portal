@@ -13,22 +13,26 @@ export async function up(knex: Knex): Promise<void> {
     table.string('student_id', 50)
     table.string('major', 150)
     table
-      .string('intern_type', 20)
+      .enum('intern_type', ['student', 'graduate', 'other'])
       .notNullable()
       .defaultTo('student')
-      .checkIn(['student', 'graduate', 'other'])
     table.string('cohort', 50)
     table.date('start_date').notNullable()
     table.date('end_date')
     table
-      .string('status', 20)
+      .enum('status', [
+        'applied',
+        'active',
+        'completed',
+        'terminated',
+        'on_leave',
+      ])
       .notNullable()
       .defaultTo('applied')
-      .checkIn(['applied', 'active', 'completed', 'terminated', 'on_leave'])
     table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
     table.check(
-      '?? = ? OR (?? IS NULL AND ?? IS NULL)',
-      ['intern_type', 'student', 'university_id', 'doctor_id'],
+      "intern_type = 'student' OR (university_id IS NULL AND doctor_id IS NULL)",
+      [],
       'chk_interns_non_student_no_academic_link'
     )
     table.index('university_id', 'idx_interns_university_id')

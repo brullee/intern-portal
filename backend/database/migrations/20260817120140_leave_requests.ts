@@ -13,10 +13,9 @@ export async function up(knex: Knex): Promise<void> {
     table.date('end_date').notNullable()
     table.text('reason')
     table
-      .string('status', 20)
+      .enum('status', ['pending', 'approved', 'rejected'])
       .notNullable()
       .defaultTo('pending')
-      .checkIn(['pending', 'approved', 'rejected'])
     table
       .integer('reviewed_by')
       .references('id')

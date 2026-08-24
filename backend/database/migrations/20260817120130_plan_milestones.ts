@@ -12,10 +12,9 @@ export async function up(knex: Knex): Promise<void> {
     table.string('title', 200).notNullable()
     table.date('due_date')
     table
-      .string('status', 20)
+      .enum('status', ['not_started', 'in_progress', 'completed'])
       .notNullable()
       .defaultTo('not_started')
-      .checkIn(['not_started', 'in_progress', 'completed'])
     table.integer('sort_order').defaultTo(0)
     table.index('plan_id', 'idx_plan_milestones_plan_id')
   })

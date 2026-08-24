@@ -1,5 +1,5 @@
-import app from './src/app'
-import { PORT } from './src/utils/config'
+import app from './app'
+import { PORT } from './utils/config'
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)

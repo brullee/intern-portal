@@ -2,86 +2,38 @@ import type { Knex } from 'knex'
 
 const PERMISSIONS = [
   {
-    key: 'view_interns',
-    description: 'View intern profiles, projects, tasks, plans, and hours',
-    mentorDefault: true,
-  },
-  {
-    key: 'view_projects',
-    description: 'View projects and their details',
-    mentorDefault: true,
-  },
-  {
-    key: 'view_tasks',
-    description: 'View tasks and their details',
-    mentorDefault: true,
-  },
-  {
-    key: 'view_plans',
-    description: 'View intern plans and milestones',
-    mentorDefault: true,
-  },
-  {
-    key: 'view_hours',
-    description: 'View attendance and hours records',
-    mentorDefault: true,
-  },
-  {
-    key: 'view_activity_log',
-    description: 'View per-intern activity logs',
-    mentorDefault: true,
-  },
-  {
     key: 'manage_users',
+    description: 'Create, edit, and delete user accounts',
+  },
+  {
+    key: 'manage_universities',
+    description: 'Create, edit, and delete universities',
+  },
+  { key: 'manage_projects', description: 'Create, edit, and delete projects' },
+  { key: 'manage_tasks', description: 'Create, edit, and delete tasks' },
+  {
+    key: 'assign_interns',
     description:
-      'Create, edit, and delete interns, doctors, mentors, and universities',
-    mentorDefault: false,
+      'Assign or reassign interns to projects, tasks, doctors, and mentors',
   },
   {
-    key: 'manage_projects',
-    description: 'Create, edit, and delete projects',
-    mentorDefault: false,
-  },
-  {
-    key: 'manage_tasks',
-    description: 'Create, edit, and delete tasks',
-    mentorDefault: false,
-  },
-  {
-    key: 'approve_tasks',
+    key: 'approve_submissions',
     description: 'Approve or reject task submissions',
-    mentorDefault: false,
   },
   {
     key: 'manage_plans',
     description: 'Create, edit, and delete plans and milestones',
-    mentorDefault: false,
   },
   {
-    key: 'manage_hours',
-    description: 'Log hours manually and adjust auto-tracked hours',
-    mentorDefault: false,
+    key: 'edit_hours',
+    description: 'Manually edit or correct attendance/hours records',
   },
+  { key: 'view_audit_log', description: 'View the admin action audit log' },
   {
     key: 'manage_permissions',
-    description: 'Grant or revoke permissions for individual mentors',
-    mentorDefault: false,
-  },
-  {
-    key: 'view_audit_log',
-    description: 'View the full admin action log',
-    mentorDefault: false,
-  },
-  {
-    key: 'export_reports',
-    description: 'Export hours and progress reports as CSV/Excel',
-    mentorDefault: false,
+    description: 'Grant or revoke permissions for other mentors',
   },
 ]
-
-const MENTOR_DEFAULT_PERMISSIONS = PERMISSIONS.filter(
-  (p) => p.mentorDefault
-).map((p) => p.key)
 
 export async function seed(knex: Knex): Promise<void> {
   await knex('users').del()
@@ -105,22 +57,10 @@ export async function seed(knex: Knex): Promise<void> {
 
   const permissions = await knex('permissions').select('id', 'key')
 
-  const adminRolePermissions = permissions.map((p) => ({
-    role_id: roleIdByName.admin,
-    permission_id: p.id,
-  }))
-
-  const mentorRolePermissions = permissions
-    .filter((p) => MENTOR_DEFAULT_PERMISSIONS.includes(p.key))
-    .map((p) => ({
-      role_id: roleIdByName.mentor,
+  await knex('role_permissions').insert(
+    permissions.map((p) => ({
+      role_id: roleIdByName.admin,
       permission_id: p.id,
     }))
-
-  // doctor and intern get no role_permissions rows — their access is scoped by
-  // role + relation (university_id / own user_id), not the permission table.
-  await knex('role_permissions').insert([
-    ...adminRolePermissions,
-    ...mentorRolePermissions,
-  ])
+  )
 }

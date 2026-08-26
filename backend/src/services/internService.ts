@@ -6,12 +6,19 @@ import internsModel, {
   DuplicateUsernameError,
 } from '../models/interns'
 import userService from './userService'
+import { AppError, ValidationError } from '../errors/AppError'
 
 export { DuplicateUsernameError }
 
+export class InternNotFoundError extends AppError {
+  constructor() {
+    super(404, 'INTERN_NOT_FOUND', 'Intern not found')
+  }
+}
+
 const SALT_ROUNDS = 10
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 export interface InternInput {
   full_name: string

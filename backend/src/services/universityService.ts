@@ -1,6 +1,7 @@
 import universitiesModel, { type University } from '../models/universities'
+import { ValidationError } from '../errors/AppError'
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 export interface UniversityInput {
   name: string

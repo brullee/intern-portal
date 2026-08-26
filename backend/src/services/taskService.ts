@@ -4,10 +4,11 @@ import taskAssignmentsModel, {
   DuplicateAssignmentError,
   InvalidReferenceError,
 } from '../models/taskAssignments'
+import { ValidationError } from '../errors/AppError'
 
 export { DuplicateAssignmentError, InvalidReferenceError }
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 const VALID_PRIORITIES = ['low', 'medium', 'high']
 const VALID_STATUSES = [

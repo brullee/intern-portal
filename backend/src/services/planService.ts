@@ -2,8 +2,9 @@ import plansModel, { type Plan } from '../models/plans'
 import planMilestonesModel, {
   type PlanMilestone,
 } from '../models/planMilestones'
+import { ValidationError } from '../errors/AppError'
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 const VALID_MILESTONE_STATUSES = ['not_started', 'in_progress', 'completed']
 

@@ -5,12 +5,13 @@ import mentorsModel, {
   DuplicateUsernameError,
 } from '../models/mentors'
 import userService from './userService'
+import { ValidationError } from '../errors/AppError'
 
 export { DuplicateUsernameError }
 
 const SALT_ROUNDS = 10
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 export interface MentorInput {
   full_name: string

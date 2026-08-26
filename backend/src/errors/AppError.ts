@@ -1,9 +1,19 @@
+import { ErrorCode } from './errorCodes'
+
 export class AppError extends Error {
   statusCode: number
+  code: string
 
-  constructor(statusCode: number, message: string) {
+  constructor(statusCode: number, code: string, message: string) {
     super(message)
     this.name = new.target.name
     this.statusCode = statusCode
+    this.code = code
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message: string) {
+    super(400, ErrorCode.VALIDATION_ERROR, message)
   }
 }

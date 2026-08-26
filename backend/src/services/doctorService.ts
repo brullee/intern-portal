@@ -5,12 +5,12 @@ import doctorsModel, {
   DuplicateUsernameError,
 } from '../models/doctors'
 import userService from './userService'
+import { ValidationError } from '../errors/AppError'
 
 export { DuplicateUsernameError }
+export { ValidationError }
 
 const SALT_ROUNDS = 10
-
-export class ValidationError extends Error {}
 
 export interface DoctorInput {
   full_name: string

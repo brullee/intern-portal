@@ -4,10 +4,11 @@ import projectInternsModel, {
   DuplicateAssignmentError,
   InvalidReferenceError,
 } from '../models/projectInterns'
+import { ValidationError } from '../errors/AppError'
 
 export { DuplicateAssignmentError, InvalidReferenceError }
 
-export class ValidationError extends Error {}
+export { ValidationError }
 
 const VALID_STATUSES = ['active', 'on_hold', 'completed', 'cancelled']
 

@@ -2,8 +2,9 @@ import taskSubmissionsModel, {
   type TaskSubmission,
 } from '../models/taskSubmissions'
 import activityLogsModel from '../models/activityLogs'
+import { ValidationError } from '../errors/AppError'
 
-export class ValidationError extends Error {}
+export { ValidationError }
 export class InvalidReviewStateError extends Error {}
 
 export interface SubmissionInput {

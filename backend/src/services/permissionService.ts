@@ -3,7 +3,7 @@ import permissionsModel from '../models/permissions'
 // Effective permissions = role defaults, with per-user overrides applied on
 // top ('grant' adds a key even if the role doesn't have it, 'revoke' removes
 // one even if the role does).
-async function resolveEffectivePermissions(
+export async function resolveEffectivePermissions(
   userId: number,
   roleId: number
 ): Promise<string[]> {
@@ -25,4 +25,11 @@ async function resolveEffectivePermissions(
   return Array.from(effective)
 }
 
-export default { resolveEffectivePermissions }
+export async function userHasPermission(
+  userId: number,
+  roleId: number,
+  key: string
+): Promise<boolean> {
+  const effective = await resolveEffectivePermissions(userId, roleId)
+  return effective.includes(key)
+}

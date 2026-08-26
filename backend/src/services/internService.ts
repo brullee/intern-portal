@@ -5,6 +5,7 @@ import internsModel, {
   type NewIntern,
   DuplicateUsernameError,
 } from '../models/interns'
+import userService from './userService'
 
 export { DuplicateUsernameError }
 
@@ -143,9 +144,8 @@ async function updateIntern(
   return internsModel.findById(userId)
 }
 
-async function deleteIntern(userId: number): Promise<boolean> {
-  const deletedCount = await internsModel.remove(userId)
-  return deletedCount > 0
+function deactivateIntern(userId: number): Promise<boolean> {
+  return userService.setActive(userId, false)
 }
 
 export default {
@@ -153,5 +153,5 @@ export default {
   getIntern,
   createIntern,
   updateIntern,
-  deleteIntern,
+  deactivateIntern,
 }

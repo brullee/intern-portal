@@ -62,4 +62,68 @@ async function remove(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+async function listMilestones(req: Request, res: Response): Promise<void> {
+  const planId = Number(req.params.id)
+  const milestones = await planService.listMilestones(planId)
+  res.json({ milestones })
+}
+
+async function createMilestone(req: Request, res: Response): Promise<void> {
+  const planId = Number(req.params.id)
+  try {
+    const milestone = await planService.createMilestone(
+      planId,
+      req.body ?? {}
+    )
+    res.status(201).json({ milestone })
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message })
+      return
+    }
+    throw err
+  }
+}
+
+async function updateMilestone(req: Request, res: Response): Promise<void> {
+  const milestoneId = Number(req.params.milestoneId)
+  try {
+    const milestone = await planService.updateMilestone(
+      milestoneId,
+      req.body ?? {}
+    )
+    if (!milestone) {
+      res.status(404).json({ error: 'Milestone not found' })
+      return
+    }
+    res.json({ milestone })
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message })
+      return
+    }
+    throw err
+  }
+}
+
+async function removeMilestone(req: Request, res: Response): Promise<void> {
+  const milestoneId = Number(req.params.milestoneId)
+  const deleted = await planService.deleteMilestone(milestoneId)
+  if (!deleted) {
+    res.status(404).json({ error: 'Milestone not found' })
+    return
+  }
+  res.status(204).send()
+}
+
+export default {
+  list,
+  getOne,
+  create,
+  update,
+  remove,
+  listMilestones,
+  createMilestone,
+  updateMilestone,
+  removeMilestone,
+}

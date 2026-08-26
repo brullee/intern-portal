@@ -91,9 +91,4 @@ function update(userId: number, data: MentorUpdate): Promise<number> {
   return knex('mentors').where({ user_id: userId }).update(data)
 }
 
-function remove(userId: number): Promise<number> {
-  // mentors.user_id -> users.id is ON DELETE CASCADE
-  return knex('users').where({ id: userId }).del()
-}
-
-export default { findAll, findById, create, update, remove }
+export default { findAll, findById, create, update }

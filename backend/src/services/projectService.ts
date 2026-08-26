@@ -1,4 +1,11 @@
 import projectsModel, { type Project } from '../models/projects'
+import projectInternsModel, {
+  type ProjectIntern,
+  DuplicateAssignmentError,
+  InvalidReferenceError,
+} from '../models/projectInterns'
+
+export { DuplicateAssignmentError, InvalidReferenceError }
 
 export class ValidationError extends Error {}
 
@@ -69,10 +76,32 @@ async function deleteProject(id: number): Promise<boolean> {
   return deletedCount > 0
 }
 
+function listInterns(projectId: number): Promise<ProjectIntern[]> {
+  return projectInternsModel.findByProject(projectId)
+}
+
+function assignIntern(
+  projectId: number,
+  internId: number
+): Promise<ProjectIntern> {
+  return projectInternsModel.assign(projectId, internId)
+}
+
+async function removeIntern(
+  projectId: number,
+  internId: number
+): Promise<boolean> {
+  const deletedCount = await projectInternsModel.unassign(projectId, internId)
+  return deletedCount > 0
+}
+
 export default {
   listProjects,
   getProject,
   createProject,
   updateProject,
   deleteProject,
+  listInterns,
+  assignIntern,
+  removeIntern,
 }

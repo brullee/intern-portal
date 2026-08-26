@@ -3,8 +3,12 @@ import authService, {
   InvalidCredentialsError,
   AccountInactiveError,
 } from '../services/authService'
-import permissionService from '../services/permissionService'
-import { setAuthCookies, setAccessCookie, clearAuthCookies } from '../utils/cookies'
+import * as permissionService from '../services/permissionService'
+import {
+  setAuthCookies,
+  setAccessCookie,
+  clearAuthCookies,
+} from '../utils/cookies'
 import type { UserWithRole } from '../models/users'
 
 function toPublicUser(user: UserWithRole) {

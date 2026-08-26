@@ -38,10 +38,7 @@ async function create(req: Request, res: Response): Promise<void> {
 
 async function update(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
-  const updatedCount = await mentorService.updateMentor(
-    userId,
-    req.body ?? {}
-  )
+  const updatedCount = await mentorService.updateMentor(userId, req.body ?? {})
   if (updatedCount === 0) {
     res.status(404).json({ error: 'Mentor not found' })
     return
@@ -50,14 +47,14 @@ async function update(req: Request, res: Response): Promise<void> {
   res.json({ mentor })
 }
 
-async function remove(req: Request, res: Response): Promise<void> {
+async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
-  const deleted = await mentorService.deleteMentor(userId)
-  if (!deleted) {
+  const deactivated = await mentorService.deactivateMentor(userId)
+  if (!deactivated) {
     res.status(404).json({ error: 'Mentor not found' })
     return
   }
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+export default { list, getOne, create, update, deactivate }

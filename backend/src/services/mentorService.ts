@@ -4,6 +4,7 @@ import mentorsModel, {
   type MentorWithUser,
   DuplicateUsernameError,
 } from '../models/mentors'
+import userService from './userService'
 
 export { DuplicateUsernameError }
 
@@ -67,9 +68,8 @@ function updateMentor(
   return mentorsModel.update(userId, input)
 }
 
-async function deleteMentor(userId: number): Promise<boolean> {
-  const deletedCount = await mentorsModel.remove(userId)
-  return deletedCount > 0
+function deactivateMentor(userId: number): Promise<boolean> {
+  return userService.setActive(userId, false)
 }
 
 export default {
@@ -77,5 +77,5 @@ export default {
   getMentor,
   createMentor,
   updateMentor,
-  deleteMentor,
+  deactivateMentor,
 }

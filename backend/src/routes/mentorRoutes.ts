@@ -1,29 +1,25 @@
 import { Router } from 'express'
 import mentorController from '../controllers/mentorController'
 import { requireAuth } from '../middleware/authMiddleware'
+import { requireRole } from '../middleware/roleMiddleware'
 import { requirePermission } from '../middleware/permissionMiddleware'
 
 const router = Router()
 
-router.get('/', requireAuth, mentorController.list)
-router.get('/:userId', requireAuth, mentorController.getOne)
-router.post(
-  '/',
-  requireAuth,
-  requirePermission('manage_users'),
-  mentorController.create
-)
-router.put(
+router.use(requireAuth)
+
+router.get('/', requireRole('admin', 'mentor'), mentorController.list)
+router.get('/:userId', requireRole('admin', 'mentor'), mentorController.getOne)
+router.post('/', requirePermission('manage_users'), mentorController.create)
+router.patch(
   '/:userId',
-  requireAuth,
   requirePermission('manage_users'),
   mentorController.update
 )
-router.delete(
-  '/:userId',
-  requireAuth,
+router.patch(
+  '/:userId/deactivate',
   requirePermission('manage_users'),
-  mentorController.remove
+  mentorController.deactivate
 )
 
 export default router

@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express'
-import projectService, { ValidationError } from '../services/projectService'
+import projectService, {
+  ValidationError,
+  DuplicateAssignmentError,
+  InvalidReferenceError,
+} from '../services/projectService'
 
 async function list(req: Request, res: Response): Promise<void> {
   const projects = await projectService.listProjects()
@@ -64,4 +68,59 @@ async function remove(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+async function listInterns(req: Request, res: Response): Promise<void> {
+  const projectId = Number(req.params.id)
+  res.json({ interns: await projectService.listInterns(projectId) })
+}
+
+async function assignIntern(req: Request, res: Response): Promise<void> {
+  const projectId = Number(req.params.id)
+  const { intern_id } = req.body ?? {}
+  if (!intern_id) {
+    res.status(400).json({ error: 'intern_id is required' })
+    return
+  }
+
+  try {
+    const assignment = await projectService.assignIntern(
+      projectId,
+      Number(intern_id)
+    )
+    res.status(201).json({ assignment })
+  } catch (err) {
+    if (err instanceof DuplicateAssignmentError) {
+      res
+        .status(409)
+        .json({ error: 'Intern is already assigned to this project' })
+      return
+    }
+    if (err instanceof InvalidReferenceError) {
+      res.status(400).json({ error: 'project_id or intern_id does not exist' })
+      return
+    }
+    throw err
+  }
+}
+
+async function removeIntern(req: Request, res: Response): Promise<void> {
+  const projectId = Number(req.params.id)
+  const internId = Number(req.params.internId)
+
+  const deleted = await projectService.removeIntern(projectId, internId)
+  if (!deleted) {
+    res.status(404).json({ error: 'Assignment not found' })
+    return
+  }
+  res.status(204).send()
+}
+
+export default {
+  list,
+  getOne,
+  create,
+  update,
+  remove,
+  listInterns,
+  assignIntern,
+  removeIntern,
+}

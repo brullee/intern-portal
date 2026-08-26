@@ -65,10 +65,16 @@ async function updatePassword(id: number, newPassword: string): Promise<void> {
   await usersModel.updatePasswordHash(id, password_hash)
 }
 
+async function setActive(id: number, isActive: boolean): Promise<boolean> {
+  const updatedCount = await usersModel.setActive(id, isActive)
+  return updatedCount > 0
+}
+
 export default {
   createUser,
   verifyCredentials,
   findById,
   updateUsername,
   updatePassword,
+  setActive,
 }

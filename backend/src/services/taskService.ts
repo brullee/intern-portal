@@ -1,4 +1,11 @@
 import tasksModel, { type Task } from '../models/tasks'
+import taskAssignmentsModel, {
+  type TaskAssignment,
+  DuplicateAssignmentError,
+  InvalidReferenceError,
+} from '../models/taskAssignments'
+
+export { DuplicateAssignmentError, InvalidReferenceError }
 
 export class ValidationError extends Error {}
 
@@ -86,4 +93,32 @@ async function deleteTask(id: number): Promise<boolean> {
   return deletedCount > 0
 }
 
-export default { listTasks, getTask, createTask, updateTask, deleteTask }
+function listAssignments(taskId: number): Promise<TaskAssignment[]> {
+  return taskAssignmentsModel.findByTask(taskId)
+}
+
+function assignIntern(
+  taskId: number,
+  internId: number
+): Promise<TaskAssignment> {
+  return taskAssignmentsModel.assign(taskId, internId)
+}
+
+async function removeIntern(
+  taskId: number,
+  internId: number
+): Promise<boolean> {
+  const deletedCount = await taskAssignmentsModel.unassign(taskId, internId)
+  return deletedCount > 0
+}
+
+export default {
+  listTasks,
+  getTask,
+  createTask,
+  updateTask,
+  deleteTask,
+  listAssignments,
+  assignIntern,
+  removeIntern,
+}

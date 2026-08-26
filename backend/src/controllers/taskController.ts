@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express'
-import taskService, { ValidationError } from '../services/taskService'
+import taskService, {
+  ValidationError,
+  DuplicateAssignmentError,
+  InvalidReferenceError,
+} from '../services/taskService'
 
 async function list(req: Request, res: Response): Promise<void> {
   const tasks = await taskService.listTasks()
@@ -61,4 +65,57 @@ async function remove(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+async function listAssignments(req: Request, res: Response): Promise<void> {
+  const taskId = Number(req.params.id)
+  res.json({ interns: await taskService.listAssignments(taskId) })
+}
+
+async function assignIntern(req: Request, res: Response): Promise<void> {
+  const taskId = Number(req.params.id)
+  const { intern_id } = req.body ?? {}
+  if (!intern_id) {
+    res.status(400).json({ error: 'intern_id is required' })
+    return
+  }
+
+  try {
+    const assignment = await taskService.assignIntern(
+      taskId,
+      Number(intern_id)
+    )
+    res.status(201).json({ assignment })
+  } catch (err) {
+    if (err instanceof DuplicateAssignmentError) {
+      res.status(409).json({ error: 'Intern is already assigned to this task' })
+      return
+    }
+    if (err instanceof InvalidReferenceError) {
+      res.status(400).json({ error: 'task_id or intern_id does not exist' })
+      return
+    }
+    throw err
+  }
+}
+
+async function removeIntern(req: Request, res: Response): Promise<void> {
+  const taskId = Number(req.params.id)
+  const internId = Number(req.params.internId)
+
+  const deleted = await taskService.removeIntern(taskId, internId)
+  if (!deleted) {
+    res.status(404).json({ error: 'Assignment not found' })
+    return
+  }
+  res.status(204).send()
+}
+
+export default {
+  list,
+  getOne,
+  create,
+  update,
+  remove,
+  listAssignments,
+  assignIntern,
+  removeIntern,
+}

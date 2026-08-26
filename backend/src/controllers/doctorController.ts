@@ -50,14 +50,14 @@ async function update(req: Request, res: Response): Promise<void> {
   res.json({ doctor })
 }
 
-async function remove(req: Request, res: Response): Promise<void> {
+async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
-  const deleted = await doctorService.deleteDoctor(userId)
-  if (!deleted) {
+  const deactivated = await doctorService.deactivateDoctor(userId)
+  if (!deactivated) {
     res.status(404).json({ error: 'Doctor not found' })
     return
   }
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+export default { list, getOne, create, update, deactivate }

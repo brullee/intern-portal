@@ -1,29 +1,38 @@
 import { Router } from 'express'
 import planController from '../controllers/planController'
 import { requireAuth } from '../middleware/authMiddleware'
+import { requireRole } from '../middleware/roleMiddleware'
 import { requirePermission } from '../middleware/permissionMiddleware'
 
 const router = Router()
 
-router.get('/', requireAuth, planController.list)
-router.get('/:id', requireAuth, planController.getOne)
-router.post(
-  '/',
-  requireAuth,
-  requirePermission('manage_plans'),
-  planController.create
+router.use(requireAuth)
+
+router.get('/', requireRole('admin', 'mentor'), planController.list)
+router.get('/:id', requireRole('admin', 'mentor'), planController.getOne)
+router.post('/', requirePermission('manage_plans'), planController.create)
+router.patch('/:id', requirePermission('manage_plans'), planController.update)
+router.delete('/:id', requirePermission('manage_plans'), planController.remove)
+
+router.get(
+  '/:id/milestones',
+  requireRole('admin', 'mentor'),
+  planController.listMilestones
 )
-router.put(
-  '/:id',
-  requireAuth,
+router.post(
+  '/:id/milestones',
   requirePermission('manage_plans'),
-  planController.update
+  planController.createMilestone
+)
+router.patch(
+  '/:id/milestones/:milestoneId',
+  requirePermission('manage_plans'),
+  planController.updateMilestone
 )
 router.delete(
-  '/:id',
-  requireAuth,
+  '/:id/milestones/:milestoneId',
   requirePermission('manage_plans'),
-  planController.remove
+  planController.removeMilestone
 )
 
 export default router

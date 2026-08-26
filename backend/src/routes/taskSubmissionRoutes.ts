@@ -5,13 +5,14 @@ import { requirePermission } from '../middleware/permissionMiddleware'
 
 const router = Router()
 
-router.get('/', requireAuth, taskSubmissionController.listByTask)
-router.get('/:id', requireAuth, taskSubmissionController.getOne)
-router.post('/', requireAuth, taskSubmissionController.create)
-router.put(
+router.use(requireAuth)
+
+router.get('/', taskSubmissionController.listByTask)
+router.get('/:id', taskSubmissionController.getOne)
+router.post('/', taskSubmissionController.create)
+router.patch(
   '/:id/review',
-  requireAuth,
-  requirePermission('approve_tasks'),
+  requirePermission('approve_submissions'),
   taskSubmissionController.review
 )
 

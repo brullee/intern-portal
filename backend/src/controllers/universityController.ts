@@ -52,14 +52,14 @@ async function update(req: Request, res: Response): Promise<void> {
   }
 }
 
-async function remove(req: Request, res: Response): Promise<void> {
+async function deactivate(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
-  const deleted = await universityService.deleteUniversity(id)
-  if (!deleted) {
+  const deactivated = await universityService.deactivateUniversity(id)
+  if (!deactivated) {
     res.status(404).json({ error: 'University not found' })
     return
   }
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+export default { list, getOne, create, update, deactivate }

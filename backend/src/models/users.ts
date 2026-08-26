@@ -75,6 +75,12 @@ function updatePasswordHash(
     .update({ password_hash, updated_at: knex.fn.now() })
 }
 
+function setActive(id: number, isActive: boolean): Promise<number> {
+  return knex<User>('users')
+    .where({ id })
+    .update({ is_active: isActive, updated_at: knex.fn.now() })
+}
+
 export default {
   findByUsername,
   findByUsernameWithRole,
@@ -83,4 +89,5 @@ export default {
   createUser,
   updateUsername,
   updatePasswordHash,
+  setActive,
 }

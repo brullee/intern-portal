@@ -37,9 +37,9 @@ function updateUniversity(
   return universitiesModel.update(id, input)
 }
 
-async function deleteUniversity(id: number): Promise<boolean> {
-  const deletedCount = await universitiesModel.remove(id)
-  return deletedCount > 0
+async function deactivateUniversity(id: number): Promise<boolean> {
+  const updatedCount = await universitiesModel.setActive(id, false)
+  return updatedCount > 0
 }
 
 export default {
@@ -47,5 +47,5 @@ export default {
   getUniversity,
   createUniversity,
   updateUniversity,
-  deleteUniversity,
+  deactivateUniversity,
 }

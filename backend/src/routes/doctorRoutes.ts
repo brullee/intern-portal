@@ -1,29 +1,17 @@
 import { Router } from 'express'
 import doctorController from '../controllers/doctorController'
 import { requireAuth } from '../middleware/authMiddleware'
-import { requirePermission } from '../middleware/permissionMiddleware'
+import { requireRole } from '../middleware/roleMiddleware'
 
 const router = Router()
 
-router.get('/', requireAuth, doctorController.list)
-router.get('/:userId', requireAuth, doctorController.getOne)
-router.post(
-  '/',
-  requireAuth,
-  requirePermission('manage_users'),
-  doctorController.create
-)
-router.put(
-  '/:userId',
-  requireAuth,
-  requirePermission('manage_users'),
-  doctorController.update
-)
-router.delete(
-  '/:userId',
-  requireAuth,
-  requirePermission('manage_users'),
-  doctorController.remove
-)
+router.use(requireAuth)
+router.use(requireRole('doctor'))
+
+router.get('/', doctorController.list)
+router.get('/:userId', doctorController.getOne)
+router.post('/', doctorController.create)
+router.patch('/:userId', doctorController.update)
+router.patch('/:userId/deactivate', doctorController.deactivate)
 
 export default router

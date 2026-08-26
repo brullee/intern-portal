@@ -54,14 +54,14 @@ async function update(req: Request, res: Response): Promise<void> {
   }
 }
 
-async function remove(req: Request, res: Response): Promise<void> {
+async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
-  const deleted = await internService.deleteIntern(userId)
-  if (!deleted) {
+  const deactivated = await internService.deactivateIntern(userId)
+  if (!deactivated) {
     res.status(404).json({ error: 'Intern not found' })
     return
   }
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, remove }
+export default { list, getOne, create, update, deactivate }

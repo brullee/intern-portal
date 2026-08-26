@@ -4,6 +4,7 @@ import doctorsModel, {
   type DoctorWithUser,
   DuplicateUsernameError,
 } from '../models/doctors'
+import userService from './userService'
 
 export { DuplicateUsernameError }
 
@@ -72,9 +73,8 @@ function updateDoctor(
   return doctorsModel.update(userId, input)
 }
 
-async function deleteDoctor(userId: number): Promise<boolean> {
-  const deletedCount = await doctorsModel.remove(userId)
-  return deletedCount > 0
+function deactivateDoctor(userId: number): Promise<boolean> {
+  return userService.setActive(userId, false)
 }
 
 export default {
@@ -82,5 +82,5 @@ export default {
   getDoctor,
   createDoctor,
   updateDoctor,
-  deleteDoctor,
+  deactivateDoctor,
 }

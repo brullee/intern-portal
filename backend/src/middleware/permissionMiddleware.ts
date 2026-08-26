@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express'
-import permissionService from '../services/permissionService'
+import * as permissionService from '../services/permissionService'
 
 function requirePermission(key: string) {
   return async function (

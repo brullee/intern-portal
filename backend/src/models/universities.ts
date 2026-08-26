@@ -4,6 +4,7 @@ export interface University {
   id: number
   name: string
   country: string | null
+  is_active: boolean
   created_at: Date
   updated_at: Date
 }
@@ -39,8 +40,10 @@ async function update(
   return university
 }
 
-function remove(id: number): Promise<number> {
-  return knex<University>('universities').where({ id }).del()
+function setActive(id: number, isActive: boolean): Promise<number> {
+  return knex<University>('universities')
+    .where({ id })
+    .update({ is_active: isActive, updated_at: knex.fn.now() })
 }
 
-export default { findAll, findById, create, update, remove }
+export default { findAll, findById, create, update, setActive }

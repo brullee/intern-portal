@@ -5,25 +5,20 @@ import { requirePermission } from '../middleware/permissionMiddleware'
 
 const router = Router()
 
-router.get('/', requireAuth, internController.list)
-router.get('/:userId', requireAuth, internController.getOne)
-router.post(
-  '/',
-  requireAuth,
-  requirePermission('manage_users'),
-  internController.create
-)
-router.put(
+router.use(requireAuth)
+
+router.get('/', internController.list)
+router.get('/:userId', internController.getOne)
+router.post('/', requirePermission('manage_users'), internController.create)
+router.patch(
   '/:userId',
-  requireAuth,
   requirePermission('manage_users'),
   internController.update
 )
-router.delete(
-  '/:userId',
-  requireAuth,
+router.patch(
+  '/:userId/deactivate',
   requirePermission('manage_users'),
-  internController.remove
+  internController.deactivate
 )
 
 export default router

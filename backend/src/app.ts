@@ -4,6 +4,7 @@ import cookieParser from 'cookie-parser'
 import authRoutes from './routes/authRoutes'
 import universityRoutes from './routes/universityRoutes'
 import doctorRoutes from './routes/doctorRoutes'
+import doctorPortalRoutes from './routes/doctorPortalRoutes'
 import mentorRoutes from './routes/mentorRoutes'
 import internRoutes from './routes/internRoutes'
 import projectRoutes from './routes/projectRoutes'
@@ -25,6 +26,7 @@ app.get('/api/ping', (req, res) => {
 app.use('/api/auth', authRoutes)
 app.use('/api/universities', universityRoutes)
 app.use('/api/doctors', doctorRoutes)
+app.use('/api/doctor', doctorPortalRoutes)
 app.use('/api/mentors', mentorRoutes)
 app.use('/api/interns', internRoutes)
 app.use('/api/projects', projectRoutes)

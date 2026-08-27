@@ -1,15 +1,11 @@
-import * as doctorModel from '../models/doctors'
-import * as internModel from '../models/interns'
-import * as taskAssignmentModel from '../models/taskAssignments'
+import doctorModel from '../models/doctors'
+import internModel from '../models/interns'
+import taskAssignmentModel from '../models/taskAssignments'
 import * as planService from './planService'
 import * as attendanceService from './attendanceService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 import { InternNotInScopeError } from '../errors/doctorScopeErrors'
 
-// A doctor sees only student interns from their own university — never
-// graduate/other interns, and never another university's students, even if
-// they know the intern's id. Every doctor-facing lookup goes through this
-// check first so scope can't be bypassed by guessing an id.
 async function verifyInScope(doctorUserId: number, internUserId: number) {
   const doctor = await doctorModel.findById(doctorUserId)
   const intern = await internModel.findById(internUserId)
@@ -65,7 +61,7 @@ export async function listInternPlans(
   pagination: PaginationParams
 ) {
   await verifyInScope(doctorUserId, internUserId)
-  return planService.listPlans(pagination, { internId: internUserId })
+  return planService.listPlansForIntern(internUserId, pagination)
 }
 
 export async function listInternAttendance(

@@ -3,6 +3,7 @@ import planMilestonesModel, {
   type PlanMilestone,
 } from '../models/planMilestones'
 import { ValidationError } from '../errors/AppError'
+import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
 export { ValidationError }
 
@@ -42,6 +43,17 @@ function assertValid(input: PlanInput): void {
 
 function listPlans(internId?: number): Promise<Plan[]> {
   return internId ? plansModel.findByIntern(internId) : plansModel.findAll()
+}
+
+export async function listPlansForIntern(
+  internId: number,
+  pagination: PaginationParams
+) {
+  const { rows, total } = await plansModel.listPaginatedByIntern(
+    internId,
+    pagination
+  )
+  return paginatedResponse(rows, total, pagination)
 }
 
 function getPlan(id: number): Promise<Plan | undefined> {

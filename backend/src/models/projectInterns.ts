@@ -1,3 +1,4 @@
+import type { Knex } from 'knex'
 import knex from '../../db'
 
 export class DuplicateAssignmentError extends Error {}
@@ -19,6 +20,15 @@ function findByIntern(internId: number): Promise<ProjectIntern[]> {
   return knex<ProjectIntern>('project_interns').where({ intern_id: internId })
 }
 
+function find(
+  projectId: number,
+  internId: number
+): Promise<ProjectIntern | undefined> {
+  return knex<ProjectIntern>('project_interns')
+    .where({ project_id: projectId, intern_id: internId })
+    .first()
+}
+
 async function assign(
   projectId: number,
   internId: number
@@ -37,10 +47,14 @@ async function assign(
   }
 }
 
-function unassign(projectId: number, internId: number): Promise<number> {
-  return knex('project_interns')
+function unassign(
+  projectId: number,
+  internId: number,
+  trx: Knex = knex
+): Promise<number> {
+  return trx('project_interns')
     .where({ project_id: projectId, intern_id: internId })
     .del()
 }
 
-export default { findByProject, findByIntern, assign, unassign }
+export default { findByProject, findByIntern, find, assign, unassign }

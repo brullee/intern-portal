@@ -1,40 +1,33 @@
 import universitiesModel, { type University } from '../models/universities'
-import { ValidationError } from '../errors/AppError'
+import { PaginationParams, paginatedResponse } from '../utils/pagination'
+import type {
+  CreateUniversityBody,
+  UpdateUniversityBody,
+} from '../schemas/universitySchemas'
 
-export { ValidationError }
-
-export interface UniversityInput {
-  name: string
-  country?: string
-}
-
-function assertValidName(name: string): void {
-  if (!name || !name.trim()) {
-    throw new ValidationError('name is required')
-  }
-}
-
-function listUniversities(): Promise<University[]> {
-  return universitiesModel.findAll()
+export async function listUniversities(
+  pagination: PaginationParams,
+  filters: { includeInactive?: boolean } = {}
+) {
+  const { rows, total } = await universitiesModel.list(pagination, filters)
+  return paginatedResponse(rows, total, pagination)
 }
 
 function getUniversity(id: number): Promise<University | undefined> {
   return universitiesModel.findById(id)
 }
 
-function createUniversity(input: UniversityInput): Promise<University> {
-  assertValidName(input.name)
+function createUniversity(input: CreateUniversityBody): Promise<University> {
   return universitiesModel.create({
-    name: input.name.trim(),
-    country: input.country?.trim(),
+    name: input.name,
+    country: input.country,
   })
 }
 
 function updateUniversity(
   id: number,
-  input: Partial<UniversityInput>
+  input: UpdateUniversityBody
 ): Promise<University | undefined> {
-  if (input.name !== undefined) assertValidName(input.name)
   return universitiesModel.update(id, input)
 }
 

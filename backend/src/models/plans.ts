@@ -1,4 +1,5 @@
 import knex from '../../db'
+import type { PaginationParams } from '../utils/pagination'
 
 export interface Plan {
   id: number
@@ -30,6 +31,20 @@ function findByIntern(internId: number): Promise<Plan[]> {
     .orderBy('created_at', 'desc')
 }
 
+async function listPaginatedByIntern(
+  internId: number,
+  pagination: PaginationParams
+): Promise<{ rows: Plan[]; total: number }> {
+  const base = knex<Plan>('plans').where({ intern_id: internId })
+  const countQuery = base.clone()
+  const rows = await base
+    .orderBy('created_at', 'desc')
+    .limit(pagination.limit)
+    .offset(pagination.offset)
+  const [{ count }] = await countQuery.count<{ count: string }[]>('* as count')
+  return { rows, total: Number(count) }
+}
+
 function findById(id: number): Promise<Plan | undefined> {
   return knex<Plan>('plans').where({ id }).first()
 }
@@ -54,4 +69,12 @@ function remove(id: number): Promise<number> {
   return knex<Plan>('plans').where({ id }).del()
 }
 
-export default { findAll, findByIntern, findById, create, update, remove }
+export default {
+  findAll,
+  findByIntern,
+  listPaginatedByIntern,
+  findById,
+  create,
+  update,
+  remove,
+}

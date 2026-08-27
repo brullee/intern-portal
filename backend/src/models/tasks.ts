@@ -1,3 +1,4 @@
+import type { Knex } from 'knex'
 import knex from '../../db'
 
 export interface Task {
@@ -27,8 +28,8 @@ function findAll(): Promise<Task[]> {
   return knex<Task>('tasks').orderBy('created_at', 'desc')
 }
 
-function findById(id: number): Promise<Task | undefined> {
-  return knex<Task>('tasks').where({ id }).first()
+function findById(id: number, trx: Knex = knex): Promise<Task | undefined> {
+  return trx<Task>('tasks').where({ id }).first()
 }
 
 async function create(data: NewTask): Promise<Task> {
@@ -38,11 +39,12 @@ async function create(data: NewTask): Promise<Task> {
 
 async function update(
   id: number,
-  data: Partial<NewTask>
+  data: Partial<NewTask>,
+  trx: Knex = knex
 ): Promise<Task | undefined> {
-  const [task] = await knex<Task>('tasks')
+  const [task] = await trx<Task>('tasks')
     .where({ id })
-    .update({ ...data, updated_at: knex.fn.now() })
+    .update({ ...data, updated_at: trx.fn.now() })
     .returning('*')
   return task
 }

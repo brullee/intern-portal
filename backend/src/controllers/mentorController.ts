@@ -3,6 +3,8 @@ import mentorService, {
   ValidationError,
   DuplicateUsernameError,
 } from '../services/mentorService'
+import usersModel from '../models/users'
+import * as permissionOverrideService from '../services/permissionOverrideService'
 
 async function list(req: Request, res: Response): Promise<void> {
   const mentors = await mentorService.listMentors()
@@ -57,4 +59,56 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, deactivate }
+async function getPermissions(req: Request, res: Response): Promise<void> {
+  const userId = Number(req.params.userId)
+  const user = await usersModel.findById(userId)
+  if (!user) {
+    res.status(404).json({ error: 'Mentor not found' })
+    return
+  }
+  const permissions = await permissionOverrideService.getPermissionState(
+    userId,
+    user.role_id
+  )
+  res.json({ permissions })
+}
+
+async function updatePermissions(req: Request, res: Response): Promise<void> {
+  if (!req.user) {
+    res.status(401).json({ error: 'Not authenticated' })
+    return
+  }
+  const userId = Number(req.params.userId)
+  const user = await usersModel.findById(userId)
+  if (!user) {
+    res.status(404).json({ error: 'Mentor not found' })
+    return
+  }
+
+  const { overrides } = req.body ?? {}
+  if (!Array.isArray(overrides)) {
+    res.status(400).json({ error: 'overrides must be an array' })
+    return
+  }
+
+  await permissionOverrideService.setOverrides(
+    userId,
+    overrides,
+    req.user.id
+  )
+  const permissions = await permissionOverrideService.getPermissionState(
+    userId,
+    user.role_id
+  )
+  res.json({ permissions })
+}
+
+export default {
+  list,
+  getOne,
+  create,
+  update,
+  deactivate,
+  getPermissions,
+  updatePermissions,
+}

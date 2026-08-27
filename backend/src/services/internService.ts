@@ -112,41 +112,51 @@ async function updateIntern(
   input: Partial<
     Pick<
       InternInput,
-      | 'university_id'
-      | 'doctor_id'
-      | 'student_id'
-      | 'major'
-      | 'intern_type'
-      | 'cohort'
-      | 'end_date'
-      | 'status'
+      'student_id' | 'major' | 'intern_type' | 'cohort' | 'end_date' | 'status'
     >
   >
 ): Promise<InternWithUser | undefined> {
-  if (
-    input.intern_type !== undefined ||
-    input.university_id !== undefined ||
-    input.doctor_id !== undefined
-  ) {
+  if (input.intern_type !== undefined) {
     const current = await internsModel.findById(userId)
     if (!current) return undefined
 
-    const effectiveType = input.intern_type ?? current.intern_type
-    const effectiveUniversityId =
-      input.university_id !== undefined
-        ? input.university_id
-        : current.university_id
-    const effectiveDoctorId =
-      input.doctor_id !== undefined ? input.doctor_id : current.doctor_id
-
     assertAcademicLinkAllowed(
-      effectiveType,
-      effectiveUniversityId,
-      effectiveDoctorId
+      input.intern_type,
+      current.university_id,
+      current.doctor_id
     )
   }
 
   const updatedCount = await internsModel.update(userId, input)
+  if (updatedCount === 0) return undefined
+  return internsModel.findById(userId)
+}
+
+export interface InternAssignmentInput {
+  university_id?: number | null
+  doctor_id?: number | null
+}
+
+async function updateAssignment(
+  userId: number,
+  input: InternAssignmentInput
+): Promise<InternWithUser | undefined> {
+  const current = await internsModel.findById(userId)
+  if (!current) return undefined
+
+  const universityId =
+    input.university_id !== undefined
+      ? input.university_id
+      : current.university_id
+  const doctorId =
+    input.doctor_id !== undefined ? input.doctor_id : current.doctor_id
+
+  assertAcademicLinkAllowed(current.intern_type, universityId, doctorId)
+
+  const updatedCount = await internsModel.update(userId, {
+    university_id: universityId,
+    doctor_id: doctorId,
+  })
   if (updatedCount === 0) return undefined
   return internsModel.findById(userId)
 }
@@ -160,5 +170,6 @@ export default {
   getIntern,
   createIntern,
   updateIntern,
+  updateAssignment,
   deactivateIntern,
 }

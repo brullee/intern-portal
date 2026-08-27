@@ -1,4 +1,5 @@
 import knex from '../../db'
+import type { PaginationParams } from '../utils/pagination'
 
 export class DuplicateUsernameError extends Error {}
 
@@ -49,6 +50,31 @@ function findById(userId: number): Promise<InternWithUser | undefined> {
     .where('interns.user_id', userId)
     .select(INTERN_COLUMNS)
     .first()
+}
+
+async function list(
+  pagination: PaginationParams,
+  filters: {
+    universityId?: number
+    internType?: InternWithUser['intern_type']
+  } = {}
+): Promise<{ rows: InternWithUser[]; total: number }> {
+  const base = knex('interns').join('users', 'users.id', 'interns.user_id')
+  if (filters.universityId !== undefined) {
+    base.where('interns.university_id', filters.universityId)
+  }
+  if (filters.internType !== undefined) {
+    base.where('interns.intern_type', filters.internType)
+  }
+
+  const countQuery = base.clone()
+  const rows = await base
+    .select(INTERN_COLUMNS)
+    .orderBy('users.full_name')
+    .limit(pagination.limit)
+    .offset(pagination.offset)
+  const [{ count }] = await countQuery.count<{ count: string }[]>('* as count')
+  return { rows, total: Number(count) }
 }
 
 export interface NewIntern {
@@ -126,4 +152,4 @@ function update(userId: number, data: InternUpdate): Promise<number> {
   return knex('interns').where({ user_id: userId }).update(data)
 }
 
-export default { findAll, findById, create, update }
+export default { findAll, findById, list, create, update }

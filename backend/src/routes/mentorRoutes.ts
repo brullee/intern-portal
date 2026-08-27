@@ -22,4 +22,15 @@ router.patch(
   mentorController.deactivate
 )
 
+router.get(
+  '/:userId/permissions',
+  requirePermission('manage_permissions'),
+  mentorController.getPermissions
+)
+router.patch(
+  '/:userId/permissions',
+  requirePermission('manage_permissions'),
+  mentorController.updatePermissions
+)
+
 export default router

@@ -16,6 +16,11 @@ router.patch(
   internController.update
 )
 router.patch(
+  '/:userId/assignment',
+  requirePermission('assign_interns'),
+  internController.updateAssignment
+)
+router.patch(
   '/:userId/deactivate',
   requirePermission('manage_users'),
   internController.deactivate

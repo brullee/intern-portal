@@ -1,9 +1,11 @@
+import knex from '../../db'
 import projectsModel, { type Project } from '../models/projects'
 import projectInternsModel, {
   type ProjectIntern,
   DuplicateAssignmentError,
   InvalidReferenceError,
 } from '../models/projectInterns'
+import taskAssignmentsModel from '../models/taskAssignments'
 import { ValidationError } from '../errors/AppError'
 
 export { DuplicateAssignmentError, InvalidReferenceError }
@@ -92,8 +94,19 @@ async function removeIntern(
   projectId: number,
   internId: number
 ): Promise<boolean> {
-  const deletedCount = await projectInternsModel.unassign(projectId, internId)
-  return deletedCount > 0
+  return knex.transaction(async (trx) => {
+    await taskAssignmentsModel.removeByProjectAndIntern(
+      projectId,
+      internId,
+      trx
+    )
+    const deletedCount = await projectInternsModel.unassign(
+      projectId,
+      internId,
+      trx
+    )
+    return deletedCount > 0
+  })
 }
 
 export default {

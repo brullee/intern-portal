@@ -64,4 +64,25 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
-export default { list, getOne, create, update, deactivate }
+async function updateAssignment(req: Request, res: Response): Promise<void> {
+  const userId = Number(req.params.userId)
+  try {
+    const intern = await internService.updateAssignment(
+      userId,
+      req.body ?? {}
+    )
+    if (!intern) {
+      res.status(404).json({ error: 'Intern not found' })
+      return
+    }
+    res.json({ intern })
+  } catch (err) {
+    if (err instanceof ValidationError) {
+      res.status(400).json({ error: err.message })
+      return
+    }
+    throw err
+  }
+}
+
+export default { list, getOne, create, update, deactivate, updateAssignment }

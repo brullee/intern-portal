@@ -1,3 +1,4 @@
+import type { Knex } from 'knex'
 import knex from '../../db'
 
 export interface NewActivityLog {
@@ -9,8 +10,8 @@ export interface NewActivityLog {
   details?: Record<string, unknown>
 }
 
-function create(data: NewActivityLog): Promise<void> {
-  return knex('activity_logs')
+function create(data: NewActivityLog, trx: Knex = knex): Promise<void> {
+  return trx('activity_logs')
     .insert(data)
     .then(() => undefined)
 }

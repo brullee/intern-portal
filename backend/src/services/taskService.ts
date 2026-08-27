@@ -4,9 +4,19 @@ import taskAssignmentsModel, {
   DuplicateAssignmentError,
   InvalidReferenceError,
 } from '../models/taskAssignments'
-import { ValidationError } from '../errors/AppError'
+import projectInternsModel from '../models/projectInterns'
+import { AppError, ValidationError } from '../errors/AppError'
+import { ErrorCode } from '../errors/errorCodes'
+import { InternNotOnProjectError } from '../errors/assignmentErrors'
 
 export { DuplicateAssignmentError, InvalidReferenceError }
+export { InternNotOnProjectError }
+
+export class TaskNotFoundError extends AppError {
+  constructor() {
+    super(404, ErrorCode.TASK_NOT_FOUND, 'Task not found')
+  }
+}
 
 export { ValidationError }
 
@@ -98,10 +108,18 @@ function listAssignments(taskId: number): Promise<TaskAssignment[]> {
   return taskAssignmentsModel.findByTask(taskId)
 }
 
-function assignIntern(
+async function assignIntern(
   taskId: number,
   internId: number
 ): Promise<TaskAssignment> {
+  const task = await tasksModel.findById(taskId)
+  if (!task) throw new TaskNotFoundError()
+
+  if (task.project_id !== null) {
+    const membership = await projectInternsModel.find(task.project_id, internId)
+    if (!membership) throw new InternNotOnProjectError()
+  }
+
   return taskAssignmentsModel.assign(taskId, internId)
 }
 

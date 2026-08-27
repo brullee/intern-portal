@@ -15,10 +15,10 @@ before(async () => {
     .expect(200)
 })
 
-test('admin gets all 15 seeded permissions by default', async () => {
+test('admin gets all 10 seeded permissions by default', async () => {
   const response = await api.get('/api/auth/me').expect(200)
 
-  assert.equal(response.body.permissions.length, 15)
+  assert.equal(response.body.permissions.length, 10)
   assert.ok(response.body.permissions.includes('manage_projects'))
 })
 

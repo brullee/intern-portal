@@ -1,9 +1,19 @@
 import type { Request, Response } from 'express'
-import universityService, { ValidationError } from '../services/universityService'
+import universityService from '../services/universityService'
+import { parsePagination } from '../utils/pagination'
+import type {
+  CreateUniversityBody,
+  UpdateUniversityBody,
+  ListUniversitiesQuery,
+} from '../schemas/universitySchemas'
 
 async function list(req: Request, res: Response): Promise<void> {
-  const universities = await universityService.listUniversities()
-  res.json({ universities })
+  const pagination = parsePagination(req)
+  const { includeInactive } = req.validatedQuery as ListUniversitiesQuery
+  const result = await universityService.listUniversities(pagination, {
+    includeInactive,
+  })
+  res.json(result)
 }
 
 async function getOne(req: Request, res: Response): Promise<void> {
@@ -17,39 +27,20 @@ async function getOne(req: Request, res: Response): Promise<void> {
 }
 
 async function create(req: Request, res: Response): Promise<void> {
-  try {
-    const university = await universityService.createUniversity(
-      req.body ?? {}
-    )
-    res.status(201).json({ university })
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      res.status(400).json({ error: err.message })
-      return
-    }
-    throw err
-  }
+  const body = req.body as CreateUniversityBody
+  const university = await universityService.createUniversity(body)
+  res.status(201).json({ university })
 }
 
 async function update(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
-  try {
-    const university = await universityService.updateUniversity(
-      id,
-      req.body ?? {}
-    )
-    if (!university) {
-      res.status(404).json({ error: 'University not found' })
-      return
-    }
-    res.json({ university })
-  } catch (err) {
-    if (err instanceof ValidationError) {
-      res.status(400).json({ error: err.message })
-      return
-    }
-    throw err
+  const body = req.body as UpdateUniversityBody
+  const university = await universityService.updateUniversity(id, body)
+  if (!university) {
+    res.status(404).json({ error: 'University not found' })
+    return
   }
+  res.json({ university })
 }
 
 async function deactivate(req: Request, res: Response): Promise<void> {

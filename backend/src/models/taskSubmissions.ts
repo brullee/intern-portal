@@ -1,3 +1,4 @@
+import type { Knex } from 'knex'
 import knex from '../../db'
 
 export interface TaskSubmission {
@@ -30,8 +31,11 @@ function findById(id: number): Promise<TaskSubmission | undefined> {
   return knex<TaskSubmission>('task_submissions').where({ id }).first()
 }
 
-async function create(data: NewTaskSubmission): Promise<TaskSubmission> {
-  const [row] = await knex<TaskSubmission>('task_submissions')
+async function create(
+  data: NewTaskSubmission,
+  trx: Knex = knex
+): Promise<TaskSubmission> {
+  const [row] = await trx<TaskSubmission>('task_submissions')
     .insert(data)
     .returning('*')
   return row
@@ -45,11 +49,12 @@ interface ReviewUpdate {
 
 async function review(
   id: number,
-  data: ReviewUpdate
+  data: ReviewUpdate,
+  trx: Knex = knex
 ): Promise<TaskSubmission | undefined> {
-  const [row] = await knex<TaskSubmission>('task_submissions')
+  const [row] = await trx<TaskSubmission>('task_submissions')
     .where({ id })
-    .update({ ...data, reviewed_at: knex.fn.now() })
+    .update({ ...data, reviewed_at: trx.fn.now() })
     .returning('*')
   return row
 }

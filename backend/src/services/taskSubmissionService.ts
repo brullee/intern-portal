@@ -3,6 +3,9 @@ import taskSubmissionsModel, {
   type TaskSubmission,
 } from '../models/taskSubmissions'
 import tasksModel from '../models/tasks'
+
+import storageService from './storageService'
+
 import taskAssignmentsModel from '../models/taskAssignments'
 import activityLogsModel from '../models/activityLogs'
 import { ValidationError } from '../errors/AppError'
@@ -16,27 +19,41 @@ export { ValidationError, TaskNotFoundError, TaskNotAssignedError }
 export { SubmissionNotAllowedError }
 export class InvalidReviewStateError extends Error {}
 
+
+
 export interface SubmissionInput {
   task_id: number
   note?: string
-  file_url?: string
+  files?: Express.Multer.File[] | null
+
 }
 
 function assertValid(input: SubmissionInput): void {
   if (!input.task_id) {
     throw new ValidationError('task_id is required')
   }
-  if (!input.note?.trim() && !input.file_url?.trim()) {
-    throw new ValidationError('note or file_url is required')
-  }
+
+  if (!input.note?.trim() && (!input.files || input.files.length === 0)) {
+    throw new ValidationError('note or file is required')
+}
 }
 
 function listByTask(taskId: number): Promise<TaskSubmission[]> {
   return taskSubmissionsModel.findByTask(taskId)
 }
 
-function getSubmission(id: number): Promise<TaskSubmission | undefined> {
-  return taskSubmissionsModel.findById(id)
+
+async function getSubmission(id: number): Promise<TaskSubmission | undefined> {
+  const submission = await taskSubmissionsModel.findById(id)
+  if (!submission || !submission.file_url) return submission
+
+ 
+  const fileKey = submission.file_url.split('/').pop() || submission.file_url
+
+
+  const presignedUrl = await storageService.GetFilefromS3(fileKey)
+  return { ...submission, file_url: presignedUrl }
+
 }
 
 async function createSubmission(
@@ -62,13 +79,26 @@ async function createSubmission(
     throw new SubmissionNotAllowedError()
   }
 
+
+ 
+  let uploadedUrls: string[] = []
+  if (input.files && input.files.length > 0) {
+    uploadedUrls = await storageService.uploadFiletoS3(input.files)
+  }
+
+
+  const fileUrlData = uploadedUrls.length > 0 ? uploadedUrls.join(',') : null
+
+
+
   return knex.transaction(async (trx) => {
     const submission = await taskSubmissionsModel.create(
       {
         task_id: input.task_id,
         intern_id: internId,
         note: input.note?.trim(),
-        file_url: input.file_url?.trim(),
+        file_url: fileUrlData,
+
       },
       trx
     )
@@ -125,4 +155,6 @@ export default {
   getSubmission,
   createSubmission,
   reviewSubmission,
+
 }
+

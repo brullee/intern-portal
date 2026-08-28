@@ -18,7 +18,8 @@ export interface NewTaskSubmission {
   task_id: number
   intern_id: number
   note?: string
-  file_url?: string
+  file_url?: string | null
+
 }
 
 function findByTask(taskId: number): Promise<TaskSubmission[]> {

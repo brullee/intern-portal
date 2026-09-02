@@ -1,49 +1,50 @@
-import dotenv from 'dotenv';
-//hani s3 imports 
-import  { PutObjectCommand , GetObjectCommand } from '@aws-sdk/client-s3'
-import { s3Client_Second } from '../config/s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-dotenv.config();
+import dotenv from 'dotenv'
+import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
+import { s3Client, s3Endpoint } from '../config/s3'
 
-//hani s3 service upload files
-async function uploadFiletoS3(files:Express.Multer.File[]):Promise<string[]>{
-const bucketName = process.env.IDRIVE_E2_BUCKET_NAME_SECOND;
-const endpoint = process.env.IDRIVE_E2_ENDPOINT;
-if(!bucketName){
-    throw new Error('IDRIVE_E2_BUCKET_NAME is not defined in environment variables.');
-}
-const uploadPromise = files.map(async(file) => {
-const fileName = `${Date.now()}--${file.originalname}`;
-const command = new PutObjectCommand({
-    Bucket:bucketName,
-    Key : fileName,
-    Body: file.buffer,
-    ContentType:file.mimetype,
-});
-await s3Client_Second.send(command);
-return `${endpoint}/${bucketName}/${fileName}`;
-});
-return Promise.all(uploadPromise);
+dotenv.config()
+
+const bucketName = process.env.IDRIVE_E2_BUCKET_NAME
+const endpoint = s3Endpoint
+
+function requireBucket(): string {
+  if (!bucketName) {
+    throw new Error(
+      'IDRIVE_E2_BUCKET_NAME is not defined in environment variables.'
+    )
+  }
+  return bucketName
 }
 
-//hani s3 service get files
-async function GetFilefromS3(file:string):Promise<string>{
-const bucketName = process.env.IDRIVE_E2_BUCKET_NAME_SECOND;
+async function uploadFiletoS3(files: Express.Multer.File[]): Promise<string[]> {
+  const bucket = requireBucket()
 
-if(!bucketName){
-    throw new Error('IDRIVE_E2_BUCKET_NAME is not defined in environment variables.');
+  const uploadPromise = files.map(async (file) => {
+    const fileName = `${Date.now()}--${file.originalname}`
+    const command = new PutObjectCommand({
+      Bucket: bucket,
+      Key: fileName,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    })
+    await s3Client.send(command)
+    return `${endpoint}/${bucket}/${fileName}`
+  })
+
+  return Promise.all(uploadPromise)
 }
-const fileName = file;
-const command = new GetObjectCommand({
-    Bucket:bucketName,
-    Key : fileName,
-});
-const downloadUrl = await getSignedUrl(s3Client_Second,command,{ expiresIn: 3600 });
-return downloadUrl;
+
+async function GetFilefromS3(file: string): Promise<string> {
+  const bucket = requireBucket()
+  const command = new GetObjectCommand({
+    Bucket: bucket,
+    Key: file,
+  })
+  return getSignedUrl(s3Client, command, { expiresIn: 3600 })
 }
 
 export default {
-uploadFiletoS3,
-GetFilefromS3
-};
-
+  uploadFiletoS3,
+  GetFilefromS3,
+}

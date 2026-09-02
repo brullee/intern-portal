@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
+import { MulterError } from 'multer'
 import { AppError } from '../errors/AppError'
 import { ErrorCode } from '../errors/errorCodes'
 
@@ -13,6 +14,12 @@ export function errorHandler(
     return res
       .status(err.statusCode)
       .json({ error: err.message, code: err.code })
+  }
+  if (err instanceof MulterError) {
+    return res.status(400).json({
+      error: err.message,
+      code: ErrorCode.FILE_UPLOAD_ERROR,
+    })
   }
   if (err instanceof ZodError) {
     return res.status(400).json({

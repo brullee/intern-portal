@@ -31,9 +31,14 @@ async function create(req: Request, res: Response): Promise<void> {
     res.status(401).json({ error: 'Not authenticated' })
     return
   }
+  const files = (req.files as Express.Multer.File[] | undefined) ?? []
   try {
     const submission = await taskSubmissionService.createSubmission(
-      req.body ?? {},
+      {
+        task_id: Number(req.body?.task_id),
+        note: req.body?.note,
+        files,
+      },
       req.user.id
     )
     res.status(201).json({ submission })

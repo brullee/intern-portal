@@ -1,7 +1,7 @@
 import dotenv from 'dotenv';
 //hani s3 imports 
 import  { PutObjectCommand , GetObjectCommand } from '@aws-sdk/client-s3'
-import { s3Client_First , s3Client_Second } from '../config/s3';
+import { s3Client_Second } from '../config/s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 dotenv.config();
 

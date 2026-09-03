@@ -19,7 +19,6 @@ export interface NewTaskSubmission {
   intern_id: number
   note?: string
   file_url?: string | null
-
 }
 
 function findByTask(taskId: number): Promise<TaskSubmission[]> {
@@ -30,6 +29,12 @@ function findByTask(taskId: number): Promise<TaskSubmission[]> {
 
 function findById(id: number): Promise<TaskSubmission | undefined> {
   return knex<TaskSubmission>('task_submissions').where({ id }).first()
+}
+
+function findByIntern(internId: number): Promise<TaskSubmission[]> {
+  return knex<TaskSubmission>('task_submissions')
+    .where({ intern_id: internId })
+    .orderBy('submitted_at', 'desc')
 }
 
 async function create(
@@ -60,4 +65,4 @@ async function review(
   return row
 }
 
-export default { findByTask, findById, create, review }
+export default { findByTask, findById, findByIntern, create, review }

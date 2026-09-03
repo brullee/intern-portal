@@ -20,3 +20,13 @@ export class SubmissionNotAllowedError extends AppError {
     )
   }
 }
+
+export class InvalidFileTypeError extends AppError {
+  constructor(mimetype: string) {
+    super(
+      400,
+      ErrorCode.INVALID_FILE_TYPE,
+      `File type "${mimetype}" is not allowed`
+    )
+  }
+}

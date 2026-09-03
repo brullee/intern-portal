@@ -29,6 +29,14 @@ function findById(id: number): Promise<Project | undefined> {
   return knex<Project>('projects').where({ id }).first()
 }
 
+function findByIntern(internId: number): Promise<Project[]> {
+  return knex<Project>('projects')
+    .join('project_interns', 'project_interns.project_id', 'projects.id')
+    .where('project_interns.intern_id', internId)
+    .select('projects.*')
+    .orderBy('projects.created_at', 'desc')
+}
+
 async function create(data: NewProject): Promise<Project> {
   const [project] = await knex<Project>('projects').insert(data).returning('*')
   return project
@@ -49,4 +57,4 @@ function remove(id: number): Promise<number> {
   return knex<Project>('projects').where({ id }).del()
 }
 
-export default { findAll, findById, create, update, remove }
+export default { findAll, findById, findByIntern, create, update, remove }

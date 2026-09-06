@@ -8,7 +8,7 @@ import plansModel, { type Plan } from '../models/plans'
 import planMilestonesModel, {
   type PlanMilestone,
 } from '../models/planMilestones'
-import storageService from './storageService'
+import { submissionStorage } from './storageService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
 // All lookups key on the caller's user id, which is also the interns PK
@@ -38,10 +38,9 @@ async function withSignedUrls(
 ): Promise<TaskSubmission> {
   if (!submission.file_url) return submission
   const signedUrls = await Promise.all(
-    submission.file_url.split(',').map((url) => {
-      const fileKey = url.split('/').pop() || url
-      return storageService.GetFilefromS3(fileKey)
-    })
+    submission.file_url
+      .split(',')
+      .map((url) => submissionStorage.getSignedDownloadUrl(url))
   )
   return { ...submission, file_url: signedUrls.join(',') }
 }

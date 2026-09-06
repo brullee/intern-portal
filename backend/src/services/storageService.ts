@@ -1,50 +1,62 @@
-import dotenv from 'dotenv'
 import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { s3Client, s3Endpoint } from '../config/s3'
+import {
+  plansBucket,
+  submissionsBucket,
+  s3Endpoint,
+  type BucketConfig,
+} from '../config/s3'
 
-dotenv.config()
+const SIGNED_URL_TTL = 3600
 
-const bucketName = process.env.IDRIVE_E2_BUCKET_NAME
-const endpoint = s3Endpoint
+function createStorage(bucket: BucketConfig, label: string) {
+  function requireBucket(): string {
+    if (!bucket.name) {
+      throw new Error(
+        `${label} bucket name is not defined in environment variables.`
+      )
+    }
+    return bucket.name
+  }
 
-function requireBucket(): string {
-  if (!bucketName) {
-    throw new Error(
-      'IDRIVE_E2_BUCKET_NAME is not defined in environment variables.'
+  async function upload(files: Express.Multer.File[]): Promise<string[]> {
+    const name = requireBucket()
+
+    return Promise.all(
+      files.map(async (file) => {
+        const fileName = `${Date.now()}--${file.originalname}`
+        await bucket.client.send(
+          new PutObjectCommand({
+            Bucket: name,
+            Key: fileName,
+            Body: file.buffer,
+            ContentType: file.mimetype,
+          })
+        )
+        return `${s3Endpoint}/${name}/${fileName}`
+      })
     )
   }
-  return bucketName
+
+  // Swap a stored URL (or bare key) for a short-lived presigned download URL.
+  async function getSignedDownloadUrl(url: string): Promise<string> {
+    const name = requireBucket()
+    const fileKey = url.split('/').pop() || url
+    return getSignedUrl(
+      bucket.client,
+      new GetObjectCommand({ Bucket: name, Key: fileKey }),
+      { expiresIn: SIGNED_URL_TTL }
+    )
+  }
+
+  return { upload, getSignedDownloadUrl }
 }
 
-async function uploadFiletoS3(files: Express.Multer.File[]): Promise<string[]> {
-  const bucket = requireBucket()
+// Admin/mentor-uploaded plan documents.
+export const planStorage = createStorage(plansBucket, 'Plan documents')
 
-  const uploadPromise = files.map(async (file) => {
-    const fileName = `${Date.now()}--${file.originalname}`
-    const command = new PutObjectCommand({
-      Bucket: bucket,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    })
-    await s3Client.send(command)
-    return `${endpoint}/${bucket}/${fileName}`
-  })
-
-  return Promise.all(uploadPromise)
-}
-
-async function GetFilefromS3(file: string): Promise<string> {
-  const bucket = requireBucket()
-  const command = new GetObjectCommand({
-    Bucket: bucket,
-    Key: file,
-  })
-  return getSignedUrl(s3Client, command, { expiresIn: 3600 })
-}
-
-export default {
-  uploadFiletoS3,
-  GetFilefromS3,
-}
+// Intern-uploaded task submission files.
+export const submissionStorage = createStorage(
+  submissionsBucket,
+  'Task submissions'
+)

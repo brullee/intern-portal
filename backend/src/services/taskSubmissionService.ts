@@ -4,7 +4,7 @@ import taskSubmissionsModel, {
 } from '../models/taskSubmissions'
 import tasksModel from '../models/tasks'
 
-import storageService from './storageService'
+import { submissionStorage } from './storageService'
 
 import taskAssignmentsModel from '../models/taskAssignments'
 import activityLogsModel from '../models/activityLogs'
@@ -50,10 +50,9 @@ async function getSubmission(id: number): Promise<TaskSubmission | undefined> {
   // file_url holds one or more comma-separated stored URLs; swap each for a
   // short-lived presigned download URL.
   const signedUrls = await Promise.all(
-    submission.file_url.split(',').map((url) => {
-      const fileKey = url.split('/').pop() || url
-      return storageService.GetFilefromS3(fileKey)
-    })
+    submission.file_url
+      .split(',')
+      .map((url) => submissionStorage.getSignedDownloadUrl(url))
   )
   return { ...submission, file_url: signedUrls.join(',') }
 }
@@ -85,7 +84,7 @@ async function createSubmission(
  
   let uploadedUrls: string[] = []
   if (input.files && input.files.length > 0) {
-    uploadedUrls = await storageService.uploadFiletoS3(input.files)
+    uploadedUrls = await submissionStorage.upload(input.files)
   }
 
 

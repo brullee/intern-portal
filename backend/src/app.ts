@@ -12,6 +12,7 @@ import taskRoutes from './routes/taskRoutes'
 import taskSubmissionRoutes from './routes/taskSubmissionRoutes'
 import planRoutes from './routes/planRoutes'
 import meRoutes from './routes/meRoutes'
+import attendanceRoutes from './routes/attendanceRoutes'
 import { errorHandler } from './middleware/errorHandler'
 
 const app = express()
@@ -35,7 +36,7 @@ app.use('/api/tasks', taskRoutes)
 app.use('/api/task-submissions', taskSubmissionRoutes)
 app.use('/api/plans', planRoutes)
 app.use('/api/me', meRoutes)
-
+app.use('/api' , attendanceRoutes)
 app.use(errorHandler)
 
 export default app

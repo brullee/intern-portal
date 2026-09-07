@@ -1,35 +1,66 @@
-import knex from '../../db'
-import type { PaginationParams } from '../utils/pagination'
+import db from '../../db';
+import { PaginationParams } from '../utils/pagination';
 
-// Read-side only for now — clock-in/clock-out and the 16h auto-close sweep
-// are the Attendance feature itself (separate milestone). This exists so
-// doctor-scope can list an intern's sessions.
-export interface AttendanceSession {
-  id: number
-  intern_id: number
-  clock_in: Date
-  clock_out: Date | null
-  auto_closed: boolean
-  notes: string | null
-  created_at: Date
-}
+export const findTodayRecord = async (userId: string, dateStr: string) => {
+  return db('attendance').where({ user_id: userId, date: dateStr }).first();
+};
 
-async function list(
-  pagination: PaginationParams,
-  filters: { internId?: number } = {}
-): Promise<{ rows: AttendanceSession[]; total: number }> {
-  const base = knex<AttendanceSession>('attendance_sessions')
-  if (filters.internId !== undefined) {
-    base.where({ intern_id: filters.internId })
+export const recordActivity = async (userId: string, dateStr: string, now: Date) => {
+  const existing = await findTodayRecord(userId, dateStr);
+
+  if (!existing) {
+    return db('attendance').insert({
+      user_id: userId,
+      date: dateStr,
+      first_seen_at: now,
+      last_active_at: now,
+      active_minutes: 1,
+      status: 'PENDING',
+    });
   }
 
-  const countQuery = base.clone()
-  const rows = await base
-    .orderBy('clock_in', 'desc')
+  const lastActive = new Date(existing.last_active_at).getTime();
+  const diffInSeconds = Math.floor((now.getTime() - lastActive) / 1000);
+
+  if (diffInSeconds > 3600) {
+    return db('attendance')
+      .where({ id: existing.id })
+      .update({
+        status: 'ABSENT',
+        absence_reason: 'Exceeded 60 minutes of inactivity between 9:30 AM and 1:00 PM',
+      });
+  }
+
+  const minutesToAdd = diffInSeconds >= 60 ? Math.floor(diffInSeconds / 60) : 0;
+
+  return db('attendance')
+    .where({ id: existing.id })
+    .update({
+      last_active_at: now,
+      active_minutes: db.raw('active_minutes + ?', [minutesToAdd]),
+    });
+};
+
+export const listAttendanceSessions = async (
+  pagination: PaginationParams,
+  filters: { internId?: number } = {}
+) => {
+  const query = db('attendance');
+
+  if (filters.internId) {
+    query.where('user_id', filters.internId);
+  }
+
+
+  const [{ count }] = await query.clone().count('* as count');
+  const total = Number(count);
+
+
+  const rows = await query
+    .select('*')
     .limit(pagination.limit)
     .offset(pagination.offset)
-  const [{ count }] = await countQuery.count<{ count: string }[]>('* as count')
-  return { rows, total: Number(count) }
-}
+    .orderBy('date', 'desc');
 
-export default { list }
+  return { rows, total };
+};

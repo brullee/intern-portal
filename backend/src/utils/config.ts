@@ -2,7 +2,7 @@ import dotenv from 'dotenv'
 
 dotenv.config({ quiet: true })
 
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 4000
 
 function requireEnv(name: string): string {
   const value = process.env[name]

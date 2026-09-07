@@ -1,13 +1,42 @@
 import plansModel, { type Plan } from '../models/plans'
 import planMilestonesModel, {
   type PlanMilestone,
+  type MilestoneStatus,
+  MILESTONE_STATUSES,
 } from '../models/planMilestones'
+import internsModel from '../models/interns'
 import { ValidationError } from '../errors/AppError'
+import {
+  PlanNotFoundError,
+  MilestoneNotFoundError,
+  PlanNotOwnedError,
+  PlanDocumentNotFoundError,
+} from '../errors/planErrors'
+import { planStorage } from './storageService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
-export { ValidationError }
+export { ValidationError, PlanNotFoundError }
 
-const VALID_MILESTONE_STATUSES = ['not_started', 'in_progress', 'completed']
+export interface PlanWithProgress extends Plan {
+  progress: number
+}
+
+export function progressPercent(total: number, completed: number): number {
+  if (total <= 0) return 0
+  return Math.round((completed / total) * 100)
+}
+
+async function attachProgress(plans: Plan[]): Promise<PlanWithProgress[]> {
+  const counts = await planMilestonesModel.countsByPlan(plans.map((p) => p.id))
+  const byPlan = new Map(counts.map((c) => [c.plan_id, c]))
+  return plans.map((plan) => {
+    const c = byPlan.get(plan.id)
+    return {
+      ...plan,
+      progress: progressPercent(c?.total ?? 0, c?.completed ?? 0),
+    }
+  })
+}
 
 export interface PlanMilestoneInput {
   title: string
@@ -16,10 +45,15 @@ export interface PlanMilestoneInput {
   sort_order?: number
 }
 
-function assertValidMilestoneStatus(status: string | undefined): void {
-  if (status !== undefined && !VALID_MILESTONE_STATUSES.includes(status)) {
+export function assertMilestoneStatus(
+  status: string | undefined
+): asserts status is MilestoneStatus | undefined {
+  if (
+    status !== undefined &&
+    !MILESTONE_STATUSES.includes(status as MilestoneStatus)
+  ) {
     throw new ValidationError(
-      `status must be one of: ${VALID_MILESTONE_STATUSES.join(', ')}`
+      `status must be one of: ${MILESTONE_STATUSES.join(', ')}`
     )
   }
 }
@@ -41,8 +75,18 @@ function assertValid(input: PlanInput): void {
   }
 }
 
-function listPlans(internId?: number): Promise<Plan[]> {
-  return internId ? plansModel.findByIntern(internId) : plansModel.findAll()
+async function assertInternExists(internId: number): Promise<void> {
+  const intern = await internsModel.findById(internId)
+  if (!intern) {
+    throw new ValidationError('intern_id does not match an intern')
+  }
+}
+
+async function listPlans(internId?: number): Promise<PlanWithProgress[]> {
+  const plans = internId
+    ? await plansModel.findByIntern(internId)
+    : await plansModel.findAll()
+  return attachProgress(plans)
 }
 
 export async function listPlansForIntern(
@@ -53,15 +97,45 @@ export async function listPlansForIntern(
     internId,
     pagination
   )
-  return paginatedResponse(rows, total, pagination)
+  return paginatedResponse(await attachProgress(rows), total, pagination)
 }
 
-function getPlan(id: number): Promise<Plan | undefined> {
-  return plansModel.findById(id)
+async function getPlan(id: number): Promise<PlanWithProgress | undefined> {
+  const plan = await plansModel.findById(id)
+  if (!plan) return undefined
+  const [withProgress] = await attachProgress([plan])
+  return withProgress
 }
 
-function createPlan(input: PlanInput, createdBy: number): Promise<Plan> {
+export interface PlanProgressReportRow {
+  plan_id: number
+  intern_name: string
+  title: string
+  start_date: string | null
+  end_date: string | null
+  progress: number
+}
+
+async function getProgressReport(): Promise<PlanProgressReportRow[]> {
+  const plans = await plansModel.findAllWithInternName()
+  const counts = await planMilestonesModel.countsByPlan(plans.map((p) => p.id))
+  const byPlan = new Map(counts.map((c) => [c.plan_id, c]))
+  return plans.map((plan) => {
+    const c = byPlan.get(plan.id)
+    return {
+      plan_id: plan.id,
+      intern_name: plan.intern_name,
+      title: plan.title,
+      start_date: plan.start_date,
+      end_date: plan.end_date,
+      progress: progressPercent(c?.total ?? 0, c?.completed ?? 0),
+    }
+  })
+}
+
+async function createPlan(input: PlanInput, createdBy: number): Promise<Plan> {
   assertValid(input)
+  await assertInternExists(input.intern_id)
   return plansModel.create({
     intern_id: input.intern_id,
     title: input.title.trim(),
@@ -72,14 +146,20 @@ function createPlan(input: PlanInput, createdBy: number): Promise<Plan> {
   })
 }
 
-function updatePlan(
+async function updatePlan(
   id: number,
   input: Partial<
-    Pick<PlanInput, 'title' | 'description' | 'start_date' | 'end_date'>
+    Pick<
+      PlanInput,
+      'intern_id' | 'title' | 'description' | 'start_date' | 'end_date'
+    >
   >
 ): Promise<Plan | undefined> {
   if (input.title !== undefined && !input.title.trim()) {
     throw new ValidationError('title is required')
+  }
+  if (input.intern_id !== undefined) {
+    await assertInternExists(input.intern_id)
   }
   return plansModel.update(id, input)
 }
@@ -87,6 +167,51 @@ function updatePlan(
 async function deletePlan(id: number): Promise<boolean> {
   const deletedCount = await plansModel.remove(id)
   return deletedCount > 0
+}
+
+async function requirePlan(id: number): Promise<Plan> {
+  const plan = await plansModel.findById(id)
+  if (!plan) throw new PlanNotFoundError()
+  return plan
+}
+
+async function requireMilestone(
+  planId: number,
+  milestoneId: number
+): Promise<PlanMilestone> {
+  const milestone = await planMilestonesModel.findById(milestoneId)
+  if (!milestone || milestone.plan_id !== planId) {
+    throw new MilestoneNotFoundError()
+  }
+  return milestone
+}
+
+async function setPlanDocument(
+  id: number,
+  file: Express.Multer.File
+): Promise<Plan> {
+  await requirePlan(id)
+  const [url] = await planStorage.upload([file])
+  const updated = await plansModel.setDocument(id, {
+    document_url: url,
+    document_name: file.originalname,
+  })
+  return updated as Plan
+}
+
+async function clearPlanDocument(id: number): Promise<Plan> {
+  await requirePlan(id)
+  const updated = await plansModel.setDocument(id, {
+    document_url: null,
+    document_name: null,
+  })
+  return updated as Plan
+}
+
+async function getPlanDocumentUrl(id: number): Promise<string> {
+  const plan = await requirePlan(id)
+  if (!plan.document_url) throw new PlanDocumentNotFoundError()
+  return planStorage.getSignedDownloadUrl(plan.document_url)
 }
 
 function listMilestones(planId: number): Promise<PlanMilestone[]> {
@@ -100,43 +225,71 @@ function createMilestone(
   if (!input.title || !input.title.trim()) {
     throw new ValidationError('title is required')
   }
-  assertValidMilestoneStatus(input.status)
+  assertMilestoneStatus(input.status)
   return planMilestonesModel.create({
     plan_id: planId,
     title: input.title.trim(),
     due_date: input.due_date,
-    status: input.status as PlanMilestone['status'] | undefined,
+    status: input.status,
     sort_order: input.sort_order,
   })
 }
 
-function updateMilestone(
-  id: number,
+async function updateMilestone(
+  planId: number,
+  milestoneId: number,
   input: Partial<PlanMilestoneInput>
-): Promise<PlanMilestone | undefined> {
+): Promise<PlanMilestone> {
   if (input.title !== undefined && !input.title.trim()) {
     throw new ValidationError('title is required')
   }
-  assertValidMilestoneStatus(input.status)
-  return planMilestonesModel.update(id, {
+  assertMilestoneStatus(input.status)
+  await requireMilestone(planId, milestoneId)
+  const updated = await planMilestonesModel.update(milestoneId, {
     ...input,
-    status: input.status as PlanMilestone['status'] | undefined,
+    status: input.status,
   })
+  return updated as PlanMilestone
 }
 
-async function deleteMilestone(id: number): Promise<boolean> {
-  const deletedCount = await planMilestonesModel.remove(id)
-  return deletedCount > 0
+async function deleteMilestone(
+  planId: number,
+  milestoneId: number
+): Promise<void> {
+  await requireMilestone(planId, milestoneId)
+  await planMilestonesModel.remove(milestoneId)
+}
+
+async function setMilestoneStatusForIntern(
+  internId: number,
+  planId: number,
+  milestoneId: number,
+  status: string | undefined
+): Promise<PlanMilestone> {
+  assertMilestoneStatus(status)
+  if (status === undefined) {
+    throw new ValidationError('status is required')
+  }
+  const plan = await requirePlan(planId)
+  if (plan.intern_id !== internId) throw new PlanNotOwnedError()
+  await requireMilestone(planId, milestoneId)
+  const updated = await planMilestonesModel.update(milestoneId, { status })
+  return updated as PlanMilestone
 }
 
 export default {
   listPlans,
   getPlan,
+  getProgressReport,
   createPlan,
   updatePlan,
   deletePlan,
+  setPlanDocument,
+  clearPlanDocument,
+  getPlanDocumentUrl,
   listMilestones,
   createMilestone,
   updateMilestone,
   deleteMilestone,
+  setMilestoneStatusForIntern,
 }

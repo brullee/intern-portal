@@ -14,6 +14,7 @@ let internId: number
 let projectId: number
 let taskId: number
 let planId: number
+let milestoneId: number
 
 async function cleanup() {
   const existing = await knex('users').where({ username: USERNAME }).first()
@@ -87,10 +88,13 @@ before(async () => {
     .insert({ intern_id: internId, title: 'Me Test Plan' })
     .returning('*')
   planId = plan.id
-  await knex('plan_milestones').insert({
-    plan_id: planId,
-    title: 'Milestone one',
-  })
+  const [milestone] = await knex('plan_milestones')
+    .insert({
+      plan_id: planId,
+      title: 'Milestone one',
+    })
+    .returning('*')
+  milestoneId = milestone.id
 
   await api
     .post('/api/auth/login')
@@ -128,12 +132,47 @@ test('GET /api/me/submissions returns the interns submissions', async () => {
   assert.equal(res.body.submissions[0].note, 'first pass')
 })
 
-test('GET /api/me/plans returns plans with their milestones nested', async () => {
+test('GET /api/me/plans returns plans with their milestones and progress', async () => {
   const res = await api.get('/api/me/plans').expect(200)
   assert.equal(res.body.plans.length, 1)
   assert.equal(res.body.plans[0].id, planId)
   assert.equal(res.body.plans[0].milestones.length, 1)
   assert.equal(res.body.plans[0].milestones[0].title, 'Milestone one')
+  assert.equal(res.body.plans[0].progress, 0)
+})
+
+test('an intern self-reports a milestone status and progress follows', async () => {
+  await api
+    .patch(`/api/me/plans/${planId}/milestones/${milestoneId}`)
+    .send({ status: 'completed' })
+    .expect(200)
+
+  const res = await api.get('/api/me/plans').expect(200)
+  assert.equal(res.body.plans[0].progress, 100)
+
+  await knex('plan_milestones')
+    .where({ id: milestoneId })
+    .update({ status: 'not_started' })
+})
+
+test('an intern cannot touch a milestone on a plan that is not theirs', async () => {
+  const otherIntern = await knex('interns')
+    .whereNot({ user_id: internId })
+    .first()
+  const [foreignPlan] = await knex('plans')
+    .insert({ intern_id: otherIntern.user_id, title: 'Not yours' })
+    .returning('*')
+  const [foreignMilestone] = await knex('plan_milestones')
+    .insert({ plan_id: foreignPlan.id, title: 'nope' })
+    .returning('*')
+
+  const res = await api
+    .patch(`/api/me/plans/${foreignPlan.id}/milestones/${foreignMilestone.id}`)
+    .send({ status: 'completed' })
+    .expect(403)
+  assert.equal(res.body.code, 'PLAN_NOT_OWNED')
+
+  await knex('plans').where({ id: foreignPlan.id }).del()
 })
 
 test('GET /api/me is forbidden for a non-intern role', async () => {

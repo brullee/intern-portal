@@ -303,21 +303,19 @@ export async function up(knex: Knex): Promise<void> {
       table.index('plan_id', 'idx_plan_milestones_plan_id')
     })
 
-    .createTable('attendance_sessions', (table) => {
-      table.increments('id')
-      table
-        .integer('intern_id')
-        .notNullable()
-        .references('user_id')
-        .inTable('interns')
-        .onDelete('CASCADE')
-      table.timestamp('clock_in').notNullable()
-      table.timestamp('clock_out')
-      table.boolean('auto_closed').notNullable().defaultTo(false)
-      table.text('notes')
-      table.timestamp('created_at').notNullable().defaultTo(knex.fn.now())
-      table.index('intern_id', 'idx_attendance_sessions_intern_id')
-    })
+   .createTable('attendance', (table) => {
+    table.increments('id').primary();
+    table.integer('user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
+    table.date('date').notNullable();
+    table.timestamp('first_seen_at').nullable();
+    table.timestamp('last_active_at').nullable();
+    table.integer('active_minutes').defaultTo(0); 
+    table.enum('status', ['PRESENT', 'ABSENT', 'PENDING']).defaultTo('PENDING');
+    table.string('absence_reason').nullable();
+    table.timestamps(true, true);
+
+    table.unique(['user_id', 'date']);
+  })
 
     .createTable('activity_logs', (table) => {
       table.increments('id')
@@ -465,7 +463,7 @@ export async function down(knex: Knex): Promise<void> {
     .dropTableIfExists('conversations')
     .dropTableIfExists('leave_requests')
     .dropTableIfExists('activity_logs')
-    .dropTableIfExists('attendance_sessions')
+    .dropTableIfExists('attendance')
     .dropTableIfExists('plan_milestones')
     .dropTableIfExists('plans')
     .dropTableIfExists('task_submissions')

@@ -47,14 +47,13 @@ async function getSubmission(id: number): Promise<TaskSubmission | undefined> {
   const submission = await taskSubmissionsModel.findById(id)
   if (!submission || !submission.file_url) return submission
 
-  // file_url holds one or more comma-separated stored URLs; swap each for a
-  // short-lived presigned download URL.
-  const signedUrls = await Promise.all(
-    submission.file_url
-      .split(',')
-      .map((url) => submissionStorage.getSignedDownloadUrl(url))
-  )
-  return { ...submission, file_url: signedUrls.join(',') }
+ 
+  const fileKey = submission.file_url.split('/').pop() || submission.file_url
+
+
+  const presignedUrl = await storageService.GetFilefromS3(fileKey)
+  return { ...submission, file_url: presignedUrl }
+
 }
 
 async function createSubmission(

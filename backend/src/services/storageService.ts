@@ -1,62 +1,49 @@
-import { PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3'
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import {
-  plansBucket,
-  submissionsBucket,
-  s3Endpoint,
-  type BucketConfig,
-} from '../config/s3'
+import dotenv from 'dotenv';
+//hani s3 imports 
+import  { PutObjectCommand , GetObjectCommand } from '@aws-sdk/client-s3'
+import { s3Client_First , s3Client_Second } from '../config/s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+dotenv.config();
 
-const SIGNED_URL_TTL = 3600
-
-function createStorage(bucket: BucketConfig, label: string) {
-  function requireBucket(): string {
-    if (!bucket.name) {
-      throw new Error(
-        `${label} bucket name is not defined in environment variables.`
-      )
-    }
-    return bucket.name
-  }
-
-  async function upload(files: Express.Multer.File[]): Promise<string[]> {
-    const name = requireBucket()
-
-    return Promise.all(
-      files.map(async (file) => {
-        const fileName = `${Date.now()}--${file.originalname}`
-        await bucket.client.send(
-          new PutObjectCommand({
-            Bucket: name,
-            Key: fileName,
-            Body: file.buffer,
-            ContentType: file.mimetype,
-          })
-        )
-        return `${s3Endpoint}/${name}/${fileName}`
-      })
-    )
-  }
-
-  // Swap a stored URL (or bare key) for a short-lived presigned download URL.
-  async function getSignedDownloadUrl(url: string): Promise<string> {
-    const name = requireBucket()
-    const fileKey = url.split('/').pop() || url
-    return getSignedUrl(
-      bucket.client,
-      new GetObjectCommand({ Bucket: name, Key: fileKey }),
-      { expiresIn: SIGNED_URL_TTL }
-    )
-  }
-
-  return { upload, getSignedDownloadUrl }
+//hani s3 service upload files
+async function uploadFiletoS3(files:Express.Multer.File[]):Promise<string[]>{
+const bucketName = process.env.IDRIVE_E2_BUCKET_NAME_SECOND;
+const endpoint = process.env.IDRIVE_E2_ENDPOINT;
+if(!bucketName){
+    throw new Error('IDRIVE_E2_BUCKET_NAME is not defined in environment variables.');
+}
+const uploadPromise = files.map(async(file) => {
+const fileName = `${Date.now()}--${file.originalname}`;
+const command = new PutObjectCommand({
+    Bucket:bucketName,
+    Key : fileName,
+    Body: file.buffer,
+    ContentType:file.mimetype,
+});
+await s3Client_Second.send(command);
+return `${endpoint}/${bucketName}/${fileName}`;
+});
+return Promise.all(uploadPromise);
 }
 
-// Admin/mentor-uploaded plan documents.
-export const planStorage = createStorage(plansBucket, 'Plan documents')
+//hani s3 service get files
+async function GetFilefromS3(file:string):Promise<string>{
+const bucketName = process.env.IDRIVE_E2_BUCKET_NAME_SECOND;
 
-// Intern-uploaded task submission files.
-export const submissionStorage = createStorage(
-  submissionsBucket,
-  'Task submissions'
-)
+if(!bucketName){
+    throw new Error('IDRIVE_E2_BUCKET_NAME is not defined in environment variables.');
+}
+const fileName = file;
+const command = new GetObjectCommand({
+    Bucket:bucketName,
+    Key : fileName,
+});
+const downloadUrl = await getSignedUrl(s3Client_Second,command,{ expiresIn: 3600 });
+return downloadUrl;
+}
+
+export default {
+uploadFiletoS3,
+GetFilefromS3
+};
+

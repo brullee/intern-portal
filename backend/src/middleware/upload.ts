@@ -39,4 +39,6 @@ const upload = multer({
 
 export const uploadSubmissionFiles = upload.array('files', MAX_FILES)
 
+export const uploadPlanDocument = upload.single('document')
+
 export default uploadSubmissionFiles

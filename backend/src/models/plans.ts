@@ -9,6 +9,8 @@ export interface Plan {
   start_date: string | null
   end_date: string | null
   created_by: number | null
+  document_url: string | null
+  document_name: string | null
   created_at: Date
 }
 
@@ -23,6 +25,17 @@ export interface NewPlan {
 
 function findAll(): Promise<Plan[]> {
   return knex<Plan>('plans').orderBy('created_at', 'desc')
+}
+
+export interface PlanWithInternName extends Plan {
+  intern_name: string
+}
+
+function findAllWithInternName(): Promise<PlanWithInternName[]> {
+  return knex<Plan>('plans')
+    .join('users', 'users.id', 'plans.intern_id')
+    .select<PlanWithInternName[]>('plans.*', 'users.full_name as intern_name')
+    .orderBy('users.full_name')
 }
 
 function findByIntern(internId: number): Promise<Plan[]> {
@@ -65,16 +78,29 @@ async function update(
   return plan
 }
 
+async function setDocument(
+  id: number,
+  doc: { document_url: string | null; document_name: string | null }
+): Promise<Plan | undefined> {
+  const [plan] = await knex<Plan>('plans')
+    .where({ id })
+    .update(doc)
+    .returning('*')
+  return plan
+}
+
 function remove(id: number): Promise<number> {
   return knex<Plan>('plans').where({ id }).del()
 }
 
 export default {
   findAll,
+  findAllWithInternName,
   findByIntern,
   listPaginatedByIntern,
   findById,
   create,
   update,
+  setDocument,
   remove,
 }

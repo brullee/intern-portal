@@ -8,7 +8,8 @@ import plansModel, { type Plan } from '../models/plans'
 import planMilestonesModel, {
   type PlanMilestone,
 } from '../models/planMilestones'
-import storageService from './storageService'
+import { submissionStorage, planStorage } from './storageService'
+import planService, { progressPercent } from './planService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
 // All lookups key on the caller's user id, which is also the interns PK
@@ -38,10 +39,9 @@ async function withSignedUrls(
 ): Promise<TaskSubmission> {
   if (!submission.file_url) return submission
   const signedUrls = await Promise.all(
-    submission.file_url.split(',').map((url) => {
-      const fileKey = url.split('/').pop() || url
-      return storageService.GetFilefromS3(fileKey)
-    })
+    submission.file_url
+      .split(',')
+      .map((url) => submissionStorage.getSignedDownloadUrl(url))
   )
   return { ...submission, file_url: signedUrls.join(',') }
 }
@@ -53,15 +53,40 @@ async function listSubmissions(userId: number): Promise<TaskSubmission[]> {
 
 interface PlanWithMilestones extends Plan {
   milestones: PlanMilestone[]
+  progress: number
 }
 
 async function listPlans(userId: number): Promise<PlanWithMilestones[]> {
   const plans = await plansModel.findByIntern(userId)
   return Promise.all(
-    plans.map(async (plan) => ({
-      ...plan,
-      milestones: await planMilestonesModel.findByPlan(plan.id),
-    }))
+    plans.map(async (plan) => {
+      const milestones = await planMilestonesModel.findByPlan(plan.id)
+      const completed = milestones.filter(
+        (m) => m.status === 'completed'
+      ).length
+      return {
+        ...plan,
+        milestones,
+        progress: progressPercent(milestones.length, completed),
+        document_url: plan.document_url
+          ? await planStorage.getSignedDownloadUrl(plan.document_url)
+          : null,
+      }
+    })
+  )
+}
+
+function updateMilestoneStatus(
+  userId: number,
+  planId: number,
+  milestoneId: number,
+  status: string | undefined
+): Promise<PlanMilestone> {
+  return planService.setMilestoneStatusForIntern(
+    userId,
+    planId,
+    milestoneId,
+    status
   )
 }
 
@@ -69,6 +94,7 @@ export default {
   getProfile,
   listProjects,
   listTasks,
+  updateMilestoneStatus,
   listSubmissions,
   listPlans,
 }

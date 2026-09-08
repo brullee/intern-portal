@@ -31,10 +31,26 @@ async function listPlans(req: Request, res: Response): Promise<void> {
   res.json({ plans })
 }
 
+async function updateMilestoneStatus(
+  req: Request,
+  res: Response
+): Promise<void> {
+  const planId = Number(req.params.planId)
+  const milestoneId = Number(req.params.milestoneId)
+  const milestone = await meService.updateMilestoneStatus(
+    req.user!.id,
+    planId,
+    milestoneId,
+    req.body?.status
+  )
+  res.json({ milestone })
+}
+
 export default {
   getProfile,
   listProjects,
   listTasks,
   listSubmissions,
   listPlans,
+  updateMilestoneStatus,
 }

@@ -4,7 +4,7 @@ import taskSubmissionsModel, {
 } from '../models/taskSubmissions'
 import tasksModel from '../models/tasks'
 
-import storageService from './storageService'
+import { submissionStorage } from './storageService'
 
 import taskAssignmentsModel from '../models/taskAssignments'
 import activityLogsModel from '../models/activityLogs'
@@ -83,7 +83,7 @@ async function createSubmission(
  
   let uploadedUrls: string[] = []
   if (input.files && input.files.length > 0) {
-    uploadedUrls = await storageService.uploadFiletoS3(input.files)
+    uploadedUrls = await submissionStorage.upload(input.files)
   }
 
 

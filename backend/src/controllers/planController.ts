@@ -62,6 +62,33 @@ async function remove(req: Request, res: Response): Promise<void> {
   res.status(204).send()
 }
 
+async function progressReport(_req: Request, res: Response): Promise<void> {
+  const data = await planService.getProgressReport()
+  res.json({ data })
+}
+
+async function getDocument(req: Request, res: Response): Promise<void> {
+  const id = Number(req.params.id)
+  const url = await planService.getPlanDocumentUrl(id)
+  res.json({ url })
+}
+
+async function uploadDocument(req: Request, res: Response): Promise<void> {
+  const id = Number(req.params.id)
+  if (!req.file) {
+    res.status(400).json({ error: 'document file is required' })
+    return
+  }
+  const plan = await planService.setPlanDocument(id, req.file)
+  res.json({ plan })
+}
+
+async function removeDocument(req: Request, res: Response): Promise<void> {
+  const id = Number(req.params.id)
+  const plan = await planService.clearPlanDocument(id)
+  res.json({ plan })
+}
+
 async function listMilestones(req: Request, res: Response): Promise<void> {
   const planId = Number(req.params.id)
   const milestones = await planService.listMilestones(planId)
@@ -71,10 +98,7 @@ async function listMilestones(req: Request, res: Response): Promise<void> {
 async function createMilestone(req: Request, res: Response): Promise<void> {
   const planId = Number(req.params.id)
   try {
-    const milestone = await planService.createMilestone(
-      planId,
-      req.body ?? {}
-    )
+    const milestone = await planService.createMilestone(planId, req.body ?? {})
     res.status(201).json({ milestone })
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -86,16 +110,14 @@ async function createMilestone(req: Request, res: Response): Promise<void> {
 }
 
 async function updateMilestone(req: Request, res: Response): Promise<void> {
+  const planId = Number(req.params.id)
   const milestoneId = Number(req.params.milestoneId)
   try {
     const milestone = await planService.updateMilestone(
+      planId,
       milestoneId,
       req.body ?? {}
     )
-    if (!milestone) {
-      res.status(404).json({ error: 'Milestone not found' })
-      return
-    }
     res.json({ milestone })
   } catch (err) {
     if (err instanceof ValidationError) {
@@ -107,12 +129,9 @@ async function updateMilestone(req: Request, res: Response): Promise<void> {
 }
 
 async function removeMilestone(req: Request, res: Response): Promise<void> {
+  const planId = Number(req.params.id)
   const milestoneId = Number(req.params.milestoneId)
-  const deleted = await planService.deleteMilestone(milestoneId)
-  if (!deleted) {
-    res.status(404).json({ error: 'Milestone not found' })
-    return
-  }
+  await planService.deleteMilestone(planId, milestoneId)
   res.status(204).send()
 }
 
@@ -122,6 +141,10 @@ export default {
   create,
   update,
   remove,
+  progressReport,
+  getDocument,
+  uploadDocument,
+  removeDocument,
   listMilestones,
   createMilestone,
   updateMilestone,

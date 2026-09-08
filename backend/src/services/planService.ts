@@ -12,7 +12,7 @@ import {
   PlanNotOwnedError,
   PlanDocumentNotFoundError,
 } from '../errors/planErrors'
-import { planStorage } from './storageService'
+import storageService from './storageService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
 export { ValidationError, PlanNotFoundError }
@@ -191,7 +191,7 @@ async function setPlanDocument(
   file: Express.Multer.File
 ): Promise<Plan> {
   await requirePlan(id)
-  const [url] = await planStorage.upload([file])
+  const [url] = await storageService.uploadFiletoS3([file])
   const updated = await plansModel.setDocument(id, {
     document_url: url,
     document_name: file.originalname,
@@ -211,7 +211,7 @@ async function clearPlanDocument(id: number): Promise<Plan> {
 async function getPlanDocumentUrl(id: number): Promise<string> {
   const plan = await requirePlan(id)
   if (!plan.document_url) throw new PlanDocumentNotFoundError()
-  return planStorage.getSignedDownloadUrl(plan.document_url)
+  return storageService.GetFilefromS3(plan.document_url)
 }
 
 function listMilestones(planId: number): Promise<PlanMilestone[]> {

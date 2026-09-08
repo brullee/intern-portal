@@ -4,7 +4,7 @@ import taskSubmissionsModel, {
 } from '../models/taskSubmissions'
 import tasksModel from '../models/tasks'
 
-import { submissionStorage } from './storageService'
+import storageService from './storageService'
 
 import taskAssignmentsModel from '../models/taskAssignments'
 import activityLogsModel from '../models/activityLogs'
@@ -47,13 +47,10 @@ async function getSubmission(id: number): Promise<TaskSubmission | undefined> {
   const submission = await taskSubmissionsModel.findById(id)
   if (!submission || !submission.file_url) return submission
 
- 
-  const fileKey = submission.file_url.split('/').pop() || submission.file_url
-
-
-  const presignedUrl = await storageService.GetFilefromS3(fileKey)
-  return { ...submission, file_url: presignedUrl }
-
+  const signedUrls = await Promise.all(
+    submission.file_url.split(',').map((url) => storageService.GetFilefromS3(url))
+  )
+  return { ...submission, file_url: signedUrls.join(',') }
 }
 
 async function createSubmission(
@@ -83,7 +80,7 @@ async function createSubmission(
  
   let uploadedUrls: string[] = []
   if (input.files && input.files.length > 0) {
-    uploadedUrls = await submissionStorage.upload(input.files)
+    uploadedUrls = await storageService.uploadFiletoS3(input.files)
   }
 
 

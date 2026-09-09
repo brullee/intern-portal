@@ -17,3 +17,21 @@ export class ValidationError extends AppError {
     super(400, ErrorCode.VALIDATION_ERROR, message)
   }
 }
+
+export class NotAuthenticatedError extends AppError {
+  constructor(message = 'Not authenticated') {
+    super(401, ErrorCode.NOT_AUTHENTICATED, message)
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message = 'Insufficient permissions') {
+    super(403, ErrorCode.INSUFFICIENT_PERMISSIONS, message)
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message = 'Resource not found') {
+    super(404, ErrorCode.NOT_FOUND, message)
+  }
+}

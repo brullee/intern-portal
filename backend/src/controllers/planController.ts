@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import planService, { ValidationError } from '../services/planService'
 
 async function list(req: Request, res: Response): Promise<void> {
@@ -11,8 +12,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const plan = await planService.getPlan(id)
   if (!plan) {
-    res.status(404).json({ error: 'Plan not found' })
-    return
+    throw new NotFoundError('Plan not found')
   }
   res.json({ plan })
 }
@@ -39,8 +39,7 @@ async function update(req: Request, res: Response): Promise<void> {
   try {
     const plan = await planService.updatePlan(id, req.body ?? {})
     if (!plan) {
-      res.status(404).json({ error: 'Plan not found' })
-      return
+      throw new NotFoundError('Plan not found')
     }
     res.json({ plan })
   } catch (err) {
@@ -56,8 +55,7 @@ async function remove(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const deleted = await planService.deletePlan(id)
   if (!deleted) {
-    res.status(404).json({ error: 'Plan not found' })
-    return
+    throw new NotFoundError('Plan not found')
   }
   res.status(204).send()
 }

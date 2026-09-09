@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import doctorService, {
   ValidationError,
   DuplicateUsernameError,
@@ -13,8 +14,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const doctor = await doctorService.getDoctor(userId)
   if (!doctor) {
-    res.status(404).json({ error: 'Doctor not found' })
-    return
+    throw new NotFoundError('Doctor not found')
   }
   res.json({ doctor })
 }
@@ -43,8 +43,7 @@ async function update(req: Request, res: Response): Promise<void> {
     req.body ?? {}
   )
   if (updatedCount === 0) {
-    res.status(404).json({ error: 'Doctor not found' })
-    return
+    throw new NotFoundError('Doctor not found')
   }
   const doctor = await doctorService.getDoctor(userId)
   res.json({ doctor })
@@ -54,8 +53,7 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const deactivated = await doctorService.deactivateDoctor(userId)
   if (!deactivated) {
-    res.status(404).json({ error: 'Doctor not found' })
-    return
+    throw new NotFoundError('Doctor not found')
   }
   res.status(204).send()
 }

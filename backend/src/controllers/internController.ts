@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import internService, {
   ValidationError,
   DuplicateUsernameError,
@@ -13,8 +14,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const intern = await internService.getIntern(userId)
   if (!intern) {
-    res.status(404).json({ error: 'Intern not found' })
-    return
+    throw new NotFoundError('Intern not found')
   }
   res.json({ intern })
 }
@@ -41,8 +41,7 @@ async function update(req: Request, res: Response): Promise<void> {
   try {
     const intern = await internService.updateIntern(userId, req.body ?? {})
     if (!intern) {
-      res.status(404).json({ error: 'Intern not found' })
-      return
+      throw new NotFoundError('Intern not found')
     }
     res.json({ intern })
   } catch (err) {
@@ -58,8 +57,7 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const deactivated = await internService.deactivateIntern(userId)
   if (!deactivated) {
-    res.status(404).json({ error: 'Intern not found' })
-    return
+    throw new NotFoundError('Intern not found')
   }
   res.status(204).send()
 }
@@ -72,8 +70,7 @@ async function updateAssignment(req: Request, res: Response): Promise<void> {
       req.body ?? {}
     )
     if (!intern) {
-      res.status(404).json({ error: 'Intern not found' })
-      return
+      throw new NotFoundError('Intern not found')
     }
     res.json({ intern })
   } catch (err) {

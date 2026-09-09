@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import projectService, {
   ValidationError,
   DuplicateAssignmentError,
@@ -14,8 +15,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const project = await projectService.getProject(id)
   if (!project) {
-    res.status(404).json({ error: 'Project not found' })
-    return
+    throw new NotFoundError('Project not found')
   }
   res.json({ project })
 }
@@ -45,8 +45,7 @@ async function update(req: Request, res: Response): Promise<void> {
   try {
     const project = await projectService.updateProject(id, req.body ?? {})
     if (!project) {
-      res.status(404).json({ error: 'Project not found' })
-      return
+      throw new NotFoundError('Project not found')
     }
     res.json({ project })
   } catch (err) {
@@ -62,8 +61,7 @@ async function remove(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const deleted = await projectService.deleteProject(id)
   if (!deleted) {
-    res.status(404).json({ error: 'Project not found' })
-    return
+    throw new NotFoundError('Project not found')
   }
   res.status(204).send()
 }
@@ -108,8 +106,7 @@ async function removeIntern(req: Request, res: Response): Promise<void> {
 
   const deleted = await projectService.removeIntern(projectId, internId)
   if (!deleted) {
-    res.status(404).json({ error: 'Assignment not found' })
-    return
+    throw new NotFoundError('Assignment not found')
   }
   res.status(204).send()
 }

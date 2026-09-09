@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import universityService from '../services/universityService'
 import { parsePagination } from '../utils/pagination'
 import type {
@@ -20,8 +21,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const university = await universityService.getUniversity(id)
   if (!university) {
-    res.status(404).json({ error: 'University not found' })
-    return
+    throw new NotFoundError('University not found')
   }
   res.json({ university })
 }
@@ -37,8 +37,7 @@ async function update(req: Request, res: Response): Promise<void> {
   const body = req.body as UpdateUniversityBody
   const university = await universityService.updateUniversity(id, body)
   if (!university) {
-    res.status(404).json({ error: 'University not found' })
-    return
+    throw new NotFoundError('University not found')
   }
   res.json({ university })
 }
@@ -47,8 +46,7 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const deactivated = await universityService.deactivateUniversity(id)
   if (!deactivated) {
-    res.status(404).json({ error: 'University not found' })
-    return
+    throw new NotFoundError('University not found')
   }
   res.status(204).send()
 }

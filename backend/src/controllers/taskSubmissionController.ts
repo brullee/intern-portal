@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import taskSubmissionService, {
   ValidationError,
   InvalidReviewStateError,
@@ -18,8 +19,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const submission = await taskSubmissionService.getSubmission(id)
   if (!submission) {
-    res.status(404).json({ error: 'Submission not found' })
-    return
+    throw new NotFoundError('Submission not found')
   }
   res.json({ submission })
 }
@@ -70,8 +70,7 @@ async function review(req: Request, res: Response): Promise<void> {
       req.user.id
     )
     if (!submission) {
-      res.status(404).json({ error: 'Submission not found' })
-      return
+      throw new NotFoundError('Submission not found')
     }
     res.json({ submission })
   } catch (err) {

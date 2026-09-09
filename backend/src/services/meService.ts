@@ -8,7 +8,7 @@ import plansModel, { type Plan } from '../models/plans'
 import planMilestonesModel, {
   type PlanMilestone,
 } from '../models/planMilestones'
-import { submissionStorage, planStorage } from './storageService'
+import storageService from './storageService'
 import planService, { progressPercent } from './planService'
 import { PaginationParams, paginatedResponse } from '../utils/pagination'
 
@@ -41,7 +41,7 @@ async function withSignedUrls(
   const signedUrls = await Promise.all(
     submission.file_url
       .split(',')
-      .map((url) => submissionStorage.getSignedDownloadUrl(url))
+      .map((url) => storageService.GetFilefromS3(url))
   )
   return { ...submission, file_url: signedUrls.join(',') }
 }
@@ -69,7 +69,7 @@ async function listPlans(userId: number): Promise<PlanWithMilestones[]> {
         milestones,
         progress: progressPercent(milestones.length, completed),
         document_url: plan.document_url
-          ? await planStorage.getSignedDownloadUrl(plan.document_url)
+          ? await storageService.GetFilefromS3(plan.document_url)
           : null,
       }
     })

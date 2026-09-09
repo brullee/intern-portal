@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import mentorService, {
   ValidationError,
   DuplicateUsernameError,
@@ -15,8 +16,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const mentor = await mentorService.getMentor(userId)
   if (!mentor) {
-    res.status(404).json({ error: 'Mentor not found' })
-    return
+    throw new NotFoundError('Mentor not found')
   }
   res.json({ mentor })
 }
@@ -42,8 +42,7 @@ async function update(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const updatedCount = await mentorService.updateMentor(userId, req.body ?? {})
   if (updatedCount === 0) {
-    res.status(404).json({ error: 'Mentor not found' })
-    return
+    throw new NotFoundError('Mentor not found')
   }
   const mentor = await mentorService.getMentor(userId)
   res.json({ mentor })
@@ -53,8 +52,7 @@ async function deactivate(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const deactivated = await mentorService.deactivateMentor(userId)
   if (!deactivated) {
-    res.status(404).json({ error: 'Mentor not found' })
-    return
+    throw new NotFoundError('Mentor not found')
   }
   res.status(204).send()
 }
@@ -63,8 +61,7 @@ async function getPermissions(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const user = await usersModel.findById(userId)
   if (!user) {
-    res.status(404).json({ error: 'Mentor not found' })
-    return
+    throw new NotFoundError('Mentor not found')
   }
   const permissions = await permissionOverrideService.getPermissionState(
     userId,
@@ -81,8 +78,7 @@ async function updatePermissions(req: Request, res: Response): Promise<void> {
   const userId = Number(req.params.userId)
   const user = await usersModel.findById(userId)
   if (!user) {
-    res.status(404).json({ error: 'Mentor not found' })
-    return
+    throw new NotFoundError('Mentor not found')
   }
 
   const { overrides } = req.body ?? {}

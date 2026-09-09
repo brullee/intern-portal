@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import meService from '../services/meService'
 import { parsePagination } from '../utils/pagination'
 
 async function getProfile(req: Request, res: Response): Promise<void> {
   const profile = await meService.getProfile(req.user!.id)
   if (!profile) {
-    res.status(404).json({ error: 'Intern profile not found' })
-    return
+    throw new NotFoundError('Intern profile not found')
   }
   res.json({ profile })
 }

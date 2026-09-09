@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express'
+import { NotFoundError } from '../errors/AppError'
 import taskService, {
   ValidationError,
   DuplicateAssignmentError,
@@ -14,8 +15,7 @@ async function getOne(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const task = await taskService.getTask(id)
   if (!task) {
-    res.status(404).json({ error: 'Task not found' })
-    return
+    throw new NotFoundError('Task not found')
   }
   res.json({ task })
 }
@@ -42,8 +42,7 @@ async function update(req: Request, res: Response): Promise<void> {
   try {
     const task = await taskService.updateTask(id, req.body ?? {})
     if (!task) {
-      res.status(404).json({ error: 'Task not found' })
-      return
+      throw new NotFoundError('Task not found')
     }
     res.json({ task })
   } catch (err) {
@@ -59,8 +58,7 @@ async function remove(req: Request, res: Response): Promise<void> {
   const id = Number(req.params.id)
   const deleted = await taskService.deleteTask(id)
   if (!deleted) {
-    res.status(404).json({ error: 'Task not found' })
-    return
+    throw new NotFoundError('Task not found')
   }
   res.status(204).send()
 }
@@ -103,8 +101,7 @@ async function removeIntern(req: Request, res: Response): Promise<void> {
 
   const deleted = await taskService.removeIntern(taskId, internId)
   if (!deleted) {
-    res.status(404).json({ error: 'Assignment not found' })
-    return
+    throw new NotFoundError('Assignment not found')
   }
   res.status(204).send()
 }

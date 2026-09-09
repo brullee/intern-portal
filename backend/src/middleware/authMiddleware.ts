@@ -1,12 +1,10 @@
 import type { Request, Response, NextFunction } from 'express'
 import authService from '../services/authService'
+import { NotAuthenticatedError } from '../errors/AppError'
 
-function requireAuth(req: Request, res: Response, next: NextFunction): void {
+function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   const token = req.cookies?.access_token
-  if (!token) {
-    res.status(401).json({ error: 'Not authenticated' })
-    return
-  }
+  if (!token) throw new NotAuthenticatedError()
 
   try {
     const payload = authService.verifyAccessToken(token)
@@ -16,11 +14,10 @@ function requireAuth(req: Request, res: Response, next: NextFunction): void {
       roleId: payload.roleId,
       roleName: payload.roleName,
     }
-    next()
   } catch {
-    res.status(401).json({ error: 'Invalid or expired session' })
+    throw new NotAuthenticatedError('Invalid or expired session')
   }
+  next()
 }
-
 
 export { requireAuth }
